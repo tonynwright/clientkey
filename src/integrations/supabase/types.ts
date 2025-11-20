@@ -14,10 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      assessments: {
+        Row: {
+          client_id: string
+          created_at: string
+          dominant_type: string
+          id: string
+          responses: Json
+          scores: Json
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          dominant_type: string
+          id?: string
+          responses: Json
+          scores: Json
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          dominant_type?: string
+          id?: string
+          responses?: Json
+          scores?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assessments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company: string | null
           created_at: string
+          disc_scores: Json | null
+          disc_type: string | null
           email: string
           id: string
           name: string
@@ -26,6 +63,8 @@ export type Database = {
         Insert: {
           company?: string | null
           created_at?: string
+          disc_scores?: Json | null
+          disc_type?: string | null
           email: string
           id?: string
           name: string
@@ -34,56 +73,14 @@ export type Database = {
         Update: {
           company?: string | null
           created_at?: string
+          disc_scores?: Json | null
+          disc_type?: string | null
           email?: string
           id?: string
           name?: string
           updated_at?: string
         }
         Relationships: []
-      }
-      disc_assessments: {
-        Row: {
-          assessment_data: Json | null
-          c_score: number
-          client_id: string
-          created_at: string
-          d_score: number
-          i_score: number
-          id: string
-          primary_type: string
-          s_score: number
-        }
-        Insert: {
-          assessment_data?: Json | null
-          c_score?: number
-          client_id: string
-          created_at?: string
-          d_score?: number
-          i_score?: number
-          id?: string
-          primary_type: string
-          s_score?: number
-        }
-        Update: {
-          assessment_data?: Json | null
-          c_score?: number
-          client_id?: string
-          created_at?: string
-          d_score?: number
-          i_score?: number
-          id?: string
-          primary_type?: string
-          s_score?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "disc_assessments_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
