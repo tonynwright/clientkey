@@ -386,7 +386,32 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {subscription?.pricing_tier === 'free' && !isAdmin && (
+        {user?.email === 'demo@clientkey.com' && (
+          <Alert className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <AlertDescription className="flex items-center justify-between gap-4">
+              <div>
+                <div className="font-semibold text-foreground mb-1">You're exploring the demo account</div>
+                <p className="text-sm text-muted-foreground">
+                  This is a shared environment. Sign up for your own account to save your data and unlock all features.
+                </p>
+              </div>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => {
+                  signOut();
+                  navigate('/auth');
+                }}
+                className="shrink-0"
+              >
+                Sign Up Now
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {subscription?.pricing_tier === 'free' && !isAdmin && user?.email !== 'demo@clientkey.com' && (
           <Alert className="mb-6 border-primary">
             <Zap className="h-4 w-4 text-primary" />
             <AlertDescription className="flex items-center justify-between">
