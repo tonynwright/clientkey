@@ -373,6 +373,9 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => navigate('/profile')}>
+                My Account
+              </Button>
               <Button variant="outline" onClick={signOut}>
                 Sign Out
               </Button>

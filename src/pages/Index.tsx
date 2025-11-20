@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +7,21 @@ import { useNavigate } from "react-router-dom";
 import { DISCBackground } from "@/components/DISCBackground";
 import { DISCShape } from "@/components/DISCShape";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
   const navigate = useNavigate();
   const heroSection = useScrollAnimation({ threshold: 0.2 });
   const problemSection = useScrollAnimation({ threshold: 0.3 });
   const stepsSection = useScrollAnimation({ threshold: 0.2 });
+  const { user } = useAuth();
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
