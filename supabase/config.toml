@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-disc-insights]
 verify_jwt = true
+
+[functions.check-expiring-subscriptions]
+verify_jwt = false
