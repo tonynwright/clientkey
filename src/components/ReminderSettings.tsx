@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ interface ReminderSettingsType {
 
 export const ReminderSettings = () => {
   const queryClient = useQueryClient();
+  const { isDemoAccount } = useAuth();
   const [delayDays, setDelayDays] = useState<number>(3);
   const [maxReminders, setMaxReminders] = useState<number>(3);
 
@@ -41,6 +43,10 @@ export const ReminderSettings = () => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async () => {
+      if (isDemoAccount) {
+        throw new Error("Demo account is read-only. Sign up for your own account to update settings!");
+      }
+
       const { error } = await supabase
         .from("reminder_settings")
         .update({
@@ -58,11 +64,11 @@ export const ReminderSettings = () => {
         description: "Reminder settings have been saved successfully",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error updating settings:", error);
       toast({
         title: "Failed to update settings",
-        description: "Please try again later",
+        description: error?.message || "Please try again later",
         variant: "destructive",
       });
     },

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Mail, Palette, Code, Eye } from "lucide-react";
 
@@ -25,6 +26,7 @@ export function EmailTemplates() {
   const [saving, setSaving] = useState(false);
   const [invitationTemplate, setInvitationTemplate] = useState<EmailTemplate | null>(null);
   const [reminderTemplate, setReminderTemplate] = useState<EmailTemplate | null>(null);
+  const { isDemoAccount } = useAuth();
 
   useEffect(() => {
     fetchTemplates();
@@ -51,6 +53,11 @@ export function EmailTemplates() {
   };
 
   const handleSaveTemplate = async (template: EmailTemplate) => {
+    if (isDemoAccount) {
+      toast.error("Demo account is read-only. Sign up for your own account to edit templates!");
+      return;
+    }
+
     setSaving(true);
     try {
       const { error } = await supabase
