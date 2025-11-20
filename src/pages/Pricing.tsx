@@ -274,6 +274,164 @@ export default function Pricing() {
           </Card>
         </div>
 
+        {/* Email Template Comparison */}
+        <div className="max-w-6xl mx-auto mb-16">
+          <div className="text-center mb-8">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              <Mail className="h-3 w-3 mr-1" />
+              Pro Feature Spotlight
+            </Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              Custom Email Templates
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Stand out with branded, professional emails that reflect your agency's identity
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Default Template */}
+            <Card className="border-2 border-border">
+              <CardHeader className="border-b border-border bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Badge variant="outline">Free Tier</Badge>
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">Default Template</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="bg-white border border-border rounded-lg p-6 shadow-sm">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 bg-muted rounded-full mx-auto mb-3 flex items-center justify-center">
+                      <Mail className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      You're Invited to Take a DISC Assessment
+                    </h3>
+                  </div>
+                  <div className="space-y-3 text-sm text-gray-600">
+                    <p>Hi John Smith,</p>
+                    <p>
+                      We'd like to invite you to complete a DISC personality assessment. 
+                      This will help us understand your communication style better.
+                    </p>
+                    <div className="my-4">
+                      <button className="w-full bg-blue-600 text-white py-2 px-4 rounded">
+                        Take Assessment
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 pt-4 border-t border-gray-200">
+                      This assessment takes about 5 minutes to complete.
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">Limitations:</p>
+                  <ul className="space-y-1 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-muted-foreground/40" />
+                      No branding customization
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-muted-foreground/40" />
+                      Generic design and colors
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-muted-foreground/40" />
+                      Fixed content and messaging
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Branded Template */}
+            <Card className="border-4 border-primary relative shadow-lg">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <Badge className="bg-primary text-primary-foreground px-6 py-1 text-sm font-bold shadow-md">
+                  PRO ONLY
+                </Badge>
+              </div>
+              <CardHeader className="border-b border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Badge className="bg-primary text-primary-foreground">Pro Plan</Badge>
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-1">Fully Customizable</p>
+                  </div>
+                  <Crown className="h-6 w-6 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="bg-white border-2 border-primary/20 rounded-lg p-6 shadow-lg">
+                  <div className="text-center mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg mx-auto mb-3 flex items-center justify-center shadow-md">
+                      <span className="text-white font-bold text-xl">AC</span>
+                    </div>
+                    <h3 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                      Discover Your Communication Style
+                    </h3>
+                  </div>
+                  <div className="space-y-3 text-sm text-gray-700">
+                    <p className="font-medium">Hi John Smith,</p>
+                    <p>
+                      At <span className="font-semibold text-indigo-600">Acme Consulting</span>, we believe in 
+                      understanding what makes you unique. We've prepared a personalized DISC assessment 
+                      just for you.
+                    </p>
+                    <div className="my-4">
+                      <button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg shadow-md font-semibold hover:shadow-lg transition-shadow">
+                        Start Your Assessment →
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-600 pt-4 border-t-2 border-indigo-100">
+                      Questions? Visit your <a href="#" className="text-indigo-600 underline">client portal</a>
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-primary">Pro Features:</p>
+                  <ul className="space-y-1 text-sm text-foreground">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Your logo and brand colors
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Custom content and messaging
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Professional, polished design
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-primary" />
+                      Your own billing portal links
+                    </li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-8">
+            <p className="text-muted-foreground mb-4">
+              Every touchpoint matters. Make your emails reflect your brand's professionalism.
+            </p>
+            <Button 
+              size="lg"
+              onClick={() => navigate(user ? '/dashboard' : '/auth')}
+            >
+              <Sparkles className="h-5 w-5 mr-2" />
+              Upgrade to Pro - Unlock Custom Templates
+            </Button>
+          </div>
+        </div>
+
         {/* FAQ / Value Props */}
         <div className="max-w-4xl mx-auto mb-16">
           <h2 className="text-3xl font-bold text-center mb-8">
