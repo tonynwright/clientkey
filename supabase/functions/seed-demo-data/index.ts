@@ -161,12 +161,39 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully inserted ${assessmentsToInsert.length} assessments`);
 
+    // Generate AI insights for all clients in parallel
+    console.log('Generating AI insights for all clients...');
+    
+    const insightPromises = insertedClients?.map(async (client) => {
+      try {
+        const { error: insightError } = await supabase.functions.invoke('generate-disc-insights', {
+          body: { clientId: client.id }
+        });
+        
+        if (insightError) {
+          console.error(`Failed to generate insights for client ${client.id}:`, insightError);
+          return { clientId: client.id, success: false };
+        }
+        
+        return { clientId: client.id, success: true };
+      } catch (error) {
+        console.error(`Error generating insights for client ${client.id}:`, error);
+        return { clientId: client.id, success: false };
+      }
+    }) || [];
+
+    const insightResults = await Promise.all(insightPromises);
+    const successfulInsights = insightResults.filter(r => r.success).length;
+    
+    console.log(`Generated AI insights for ${successfulInsights}/${insertedClients?.length} clients`);
+
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Successfully created 25 demo clients with diverse DISC profiles`,
+        message: `Successfully created 25 demo clients with diverse DISC profiles and AI insights`,
         clientsCreated: insertedClients?.length,
         assessmentsCreated: assessmentsToInsert.length,
+        insightsGenerated: successfulInsights,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
