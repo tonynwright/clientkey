@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { ReminderSettings } from "./ReminderSettings";
 import { EmailTemplates } from "./EmailTemplates";
 import { DISCShape } from "./DISCShape";
@@ -40,6 +41,7 @@ const DISC_COLORS = {
 
 export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
   const { toast } = useToast();
+  const { isDemoAccount } = useAuth();
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -79,6 +81,15 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
   };
 
   const handleSendInvite = async (client: Client) => {
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to send invitations",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const { data, error } = await supabase.functions.invoke("send-assessment-invite", {
         body: {
@@ -105,6 +116,15 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
   };
 
   const handleSendReminders = async () => {
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to send reminders",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       toast({
         title: "Checking for reminders...",

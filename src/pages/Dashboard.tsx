@@ -61,7 +61,7 @@ const assessmentResultSchema = z.object({
 const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut, isAdmin } = useAuth();
+  const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut, isAdmin, isDemoAccount } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -199,6 +199,11 @@ const Dashboard = () => {
 
   const createClient = useMutation({
     mutationFn: async (client: z.infer<typeof clientSchema>) => {
+      // Block demo account mutations
+      if (isDemoAccount) {
+        throw new Error("Demo account is read-only. Sign up for your own account to add clients!");
+      }
+      
       // Check client limit
       if (clientCount >= clientLimit) {
         throw new Error(`You've reached your limit of ${clientLimit} clients. Upgrade to add more.`);
@@ -249,6 +254,11 @@ const Dashboard = () => {
       scores: Record<string, number>;
       dominantType: string;
     }) => {
+      // Block demo account mutations
+      if (isDemoAccount) {
+        throw new Error("Demo account is read-only. Sign up for your own account to save assessments!");
+      }
+      
       // Validate assessment data
       const validationResult = assessmentResultSchema.safeParse({
         responses,

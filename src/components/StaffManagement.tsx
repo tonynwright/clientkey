@@ -43,7 +43,7 @@ const discTypeColors: Record<string, string> = {
 
 export function StaffManagement() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isDemoAccount } = useAuth();
   const queryClient = useQueryClient();
   const [showAddDialog, setShowAddDialog] = useState(false);
 
@@ -74,6 +74,10 @@ export function StaffManagement() {
 
   const addStaff = useMutation({
     mutationFn: async (values: z.infer<typeof staffSchema>) => {
+      if (isDemoAccount) {
+        throw new Error("Demo account is read-only. Sign up for your own account to add staff!");
+      }
+
       const { data, error } = await supabase
         .from("staff")
         .insert([{ 
@@ -117,10 +121,10 @@ export function StaffManagement() {
         ),
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to add staff member. Please try again.",
+        description: error?.message || "Failed to add staff member. Please try again.",
         variant: "destructive",
       });
       console.error("Error adding staff:", error);
@@ -129,6 +133,10 @@ export function StaffManagement() {
 
   const deleteStaff = useMutation({
     mutationFn: async (staffId: string) => {
+      if (isDemoAccount) {
+        throw new Error("Demo account is read-only. Sign up for your own account to delete staff!");
+      }
+
       const { error } = await supabase
         .from("staff")
         .delete()
@@ -143,10 +151,10 @@ export function StaffManagement() {
         description: "The staff member has been removed from your team.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to remove staff member. Please try again.",
+        description: error?.message || "Failed to remove staff member. Please try again.",
         variant: "destructive",
       });
       console.error("Error deleting staff:", error);

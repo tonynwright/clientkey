@@ -13,6 +13,7 @@ interface AuthContextType {
   clientLimit: number;
   clientCount: number;
   isAdmin: boolean;
+  isDemoAccount: boolean;
   refreshSubscription: () => Promise<void>;
 }
 
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [clientLimit, setClientLimit] = useState(3);
   const [clientCount, setClientCount] = useState(0);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDemoAccount, setIsDemoAccount] = useState(false);
   const navigate = useNavigate();
 
   const fetchSubscription = async (userId: string) => {
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setIsDemoAccount(session?.user?.email === 'demo@clientkey.com');
 
         if (session?.user) {
           setTimeout(() => {
@@ -80,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setIsDemoAccount(session?.user?.email === 'demo@clientkey.com');
 
       if (session?.user) {
         fetchSubscription(session.user.id);
@@ -153,6 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clientLimit,
         clientCount,
         isAdmin,
+        isDemoAccount,
         refreshSubscription,
       }}
     >
