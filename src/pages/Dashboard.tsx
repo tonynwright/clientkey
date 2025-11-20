@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,12 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DISCAssessment } from "@/components/DISCAssessment";
 import { ClientDashboard } from "@/components/ClientDashboard";
 import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare } from "lucide-react";
+import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -43,6 +45,7 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -51,12 +54,32 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
+  // Handle successful checkout
+  useEffect(() => {
+    const success = searchParams.get('success');
+    if (success === 'true') {
+      // Verify subscription
+      setTimeout(async () => {
+        await supabase.functions.invoke('verify-subscription');
+        await refreshSubscription();
+        toast({
+          title: "Subscription activated!",
+          description: "Your account has been upgraded successfully.",
+        });
+      }, 1000);
+      
+      // Clean up URL
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, [searchParams, refreshSubscription, toast]);
+
   const [activeTab, setActiveTab] = useState("dashboard");
   const [clientForm, setClientForm] = useState({ name: "", email: "", company: "" });
   const [currentClientId, setCurrentClientId] = useState<string | null>(null);
   const [showAssessment, setShowAssessment] = useState(false);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showPlaybook, setShowPlaybook] = useState(false);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   const createClient = useMutation({
     mutationFn: async (client: z.infer<typeof clientSchema>) => {
@@ -256,6 +279,24 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {subscription?.pricing_tier === 'free' && (
+          <Alert className="mb-6 border-primary">
+            <Zap className="h-4 w-4 text-primary" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>
+                You're on the free plan. <strong>Upgrade to add up to 300 clients!</strong>
+              </span>
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => setShowUpgradeDialog(true)}
+              >
+                Upgrade Now
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
@@ -365,6 +406,12 @@ const Dashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <UpgradeDialog 
+        open={showUpgradeDialog}
+        onOpenChange={setShowUpgradeDialog}
+        currentTier={subscription?.pricing_tier || 'free'}
+      />
     </div>
   );
 };
