@@ -22,7 +22,7 @@ import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield } from "lucide-react";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -99,8 +99,22 @@ const Dashboard = () => {
     setShowOnboarding(false);
   };
 
+  const handleOnboardingSkip = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    setShowOnboarding(false);
+    toast({
+      title: "Onboarding skipped",
+      description: "You can restart the tour anytime from Settings.",
+    });
+  };
+
   const handleOnboardingCreateClient = () => {
     setActiveTab("add-client");
+  };
+
+  const handleRestartOnboarding = () => {
+    localStorage.removeItem('hasSeenOnboarding');
+    setShowOnboarding(true);
   };
 
   const createClient = useMutation({
@@ -410,6 +424,22 @@ const Dashboard = () => {
 
           <TabsContent value="settings">
             <div className="max-w-3xl mx-auto space-y-6">
+              <Card>
+                <div className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-foreground">Getting Started Tour</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Restart the onboarding tour to learn about DISC types and platform features
+                      </p>
+                    </div>
+                    <Button onClick={handleRestartOnboarding} variant="outline">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Restart Tour
+                    </Button>
+                  </div>
+                </div>
+              </Card>
               {!isAdmin && <AdminSetup />}
               <StripeWebhookSetup />
             </div>
@@ -474,6 +504,7 @@ const Dashboard = () => {
         open={showOnboarding}
         onComplete={handleOnboardingComplete}
         onCreateClient={handleOnboardingCreateClient}
+        onSkip={handleOnboardingSkip}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +9,7 @@ interface OnboardingProps {
   open: boolean;
   onComplete: () => void;
   onCreateClient: () => void;
+  onSkip?: () => void;
 }
 
 const DISC_TYPES = [
@@ -42,9 +43,24 @@ const DISC_TYPES = [
   }
 ];
 
-export function Onboarding({ open, onComplete, onCreateClient }: OnboardingProps) {
+export function Onboarding({ open, onComplete, onCreateClient, onSkip }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const totalSteps = 3;
+
+  // Reset to first step when dialog opens
+  useEffect(() => {
+    if (open) {
+      setStep(0);
+    }
+  }, [open]);
+
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    } else {
+      onComplete();
+    }
+  };
 
   const handleNext = () => {
     if (step < totalSteps) {
@@ -69,9 +85,14 @@ export function Onboarding({ open, onComplete, onCreateClient }: OnboardingProps
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <DialogTitle className="text-2xl">Welcome to ClientKey</DialogTitle>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <DialogTitle className="text-2xl">Welcome to ClientKey</DialogTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={handleSkip} className="text-muted-foreground hover:text-foreground">
+              Skip Tour
+            </Button>
           </div>
           <Progress value={progress} className="h-2" />
           <DialogDescription className="text-muted-foreground pt-2">
