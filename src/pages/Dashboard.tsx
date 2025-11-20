@@ -20,6 +20,7 @@ import { ClientComparison } from "@/components/ClientComparison";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
 import { AdminSetup } from "@/components/AdminSetup";
+import { ClientInsights } from "@/components/ClientInsights";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -407,12 +408,12 @@ const Dashboard = () => {
       </Dialog>
 
       <Dialog open={showPlaybook} onOpenChange={setShowPlaybook}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-2xl flex items-center gap-2">
                 <FileText className="h-6 w-6" />
-                {selectedClient?.name} - Communication Playbook
+                {selectedClient?.name} - Profile & Insights
               </DialogTitle>
               <Button
                 variant="outline"
@@ -425,9 +426,22 @@ const Dashboard = () => {
               </Button>
             </div>
           </DialogHeader>
-          {selectedClient?.disc_type && (
-            <CommunicationPlaybook type={selectedClient.disc_type} />
-          )}
+          <div className="space-y-6">
+            {selectedClient?.disc_type && selectedClient?.disc_scores && (
+              <>
+                <ClientInsights
+                  clientId={selectedClient.id}
+                  clientName={selectedClient.name}
+                  discType={selectedClient.disc_type}
+                  discScores={selectedClient.disc_scores}
+                />
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold mb-4">Communication Playbook</h3>
+                  <CommunicationPlaybook type={selectedClient.disc_type} />
+                </div>
+              </>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
