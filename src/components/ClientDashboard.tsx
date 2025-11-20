@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
 import { useToast } from "@/hooks/use-toast";
+import { ReminderSettings } from "./ReminderSettings";
 
 interface Client {
   id: string;
@@ -203,6 +204,8 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
           Send Reminders
         </Button>
       </div>
+
+      <ReminderSettings />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border border-border bg-card p-6">
