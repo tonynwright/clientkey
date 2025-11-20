@@ -24,7 +24,7 @@ import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
-import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
+
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
@@ -735,7 +735,6 @@ const Dashboard = () => {
                 </div>
               </Card>
               {!isAdmin && <AdminSetup />}
-              <StripeWebhookSetup />
             </div>
           </TabsContent>
         </Tabs>
