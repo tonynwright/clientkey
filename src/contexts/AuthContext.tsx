@@ -100,6 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setTimeout(async () => {
         await supabase.functions.invoke("create-free-subscription");
       }, 0);
+      navigate("/dashboard");
     }
 
     return { error };
