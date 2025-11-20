@@ -396,6 +396,7 @@ export default function Index() {
               © 2025 ClientKey. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-muted-foreground">
+              <button onClick={() => navigate('/pricing')} className="hover:text-primary transition-colors">Pricing</button>
               <button className="hover:text-primary transition-colors">Privacy Policy</button>
               <button className="hover:text-primary transition-colors">Terms of Service</button>
               <button className="hover:text-primary transition-colors">Contact</button>
