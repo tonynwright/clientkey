@@ -57,6 +57,16 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        disc: {
+          d: "hsl(var(--disc-d))",
+          "d-foreground": "hsl(var(--disc-d-foreground))",
+          i: "hsl(var(--disc-i))",
+          "i-foreground": "hsl(var(--disc-i-foreground))",
+          s: "hsl(var(--disc-s))",
+          "s-foreground": "hsl(var(--disc-s-foreground))",
+          c: "hsl(var(--disc-c))",
+          "c-foreground": "hsl(var(--disc-c-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
