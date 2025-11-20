@@ -353,6 +353,18 @@ const Dashboard = () => {
   };
 
   const handleExportPlaybook = async () => {
+    // Check if user is paid
+    const isPaidUser = subscription?.pricing_tier !== 'free' || isAdmin;
+    if (!isPaidUser) {
+      toast({
+        title: "Premium Feature",
+        description: "PDF exports are available on the Pro plan. Upgrade to download client profiles.",
+        variant: "destructive",
+      });
+      setShowUpgradeDialog(true);
+      return;
+    }
+
     if (!selectedClient?.disc_type || !selectedClient?.disc_scores) {
       toast({
         title: "Cannot export",
@@ -506,7 +518,10 @@ const Dashboard = () => {
           </TabsList>
 
           <TabsContent value="dashboard">
-            <ClientDashboard onSelectClient={handleSelectClient} />
+            <ClientDashboard 
+              onSelectClient={handleSelectClient} 
+              onUpgrade={() => setShowUpgradeDialog(true)}
+            />
           </TabsContent>
 
           <TabsContent value="add-client">
@@ -560,7 +575,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="comparison">
-            <ClientComparison />
+            <ClientComparison onUpgrade={() => setShowUpgradeDialog(true)} />
           </TabsContent>
 
           <TabsContent value="staff">

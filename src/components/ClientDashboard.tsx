@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2 } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -28,8 +28,10 @@ interface EmailTracking {
   created_at: string;
 }
 
+
 interface ClientDashboardProps {
   onSelectClient: (client: Client) => void;
+  onUpgrade?: () => void;
 }
 
 const DISC_COLORS = {
@@ -39,9 +41,10 @@ const DISC_COLORS = {
   C: "bg-disc-c/10 text-disc-c border-disc-c/30",
 };
 
-export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
+export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardProps) => {
   const { toast } = useToast();
-  const { isDemoAccount } = useAuth();
+  const { isDemoAccount, subscription, isAdmin } = useAuth();
+  const isPaidUser = subscription?.pricing_tier !== 'free' || isAdmin;
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -154,6 +157,19 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
   };
 
   const handleExportPDF = async (client: Client) => {
+    // Check if user is paid
+    if (!isPaidUser) {
+      toast({
+        title: "Premium Feature",
+        description: "PDF exports are available on the Pro plan. Upgrade to download client profiles.",
+        variant: "destructive",
+      });
+      if (onUpgrade) {
+        onUpgrade();
+      }
+      return;
+    }
+
     if (!client.disc_type || !client.disc_scores) {
       toast({
         title: "Cannot export",
@@ -405,9 +421,11 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
                           e.stopPropagation();
                           handleExportPDF(client);
                         }}
-                        title="Export PDF"
+                        title={isPaidUser ? "Export PDF" : "Upgrade to export PDF"}
+                        className={!isPaidUser ? "opacity-60" : ""}
                       >
                         <Download className="h-4 w-4" />
+                        {!isPaidUser && <Zap className="h-3 w-3 ml-1 text-primary" />}
                       </Button>
                     )}
                   </div>
