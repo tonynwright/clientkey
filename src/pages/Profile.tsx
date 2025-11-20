@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target } from "lucide-react";
+import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Profile() {
-  const { user, subscription, clientCount, clientLimit, isAdmin, signOut } = useAuth();
+  const { user, subscription, clientCount, clientLimit, isAdmin, signOut, refreshSubscription } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [payments, setPayments] = useState<any[]>([]);
 
   useEffect(() => {
@@ -25,6 +26,30 @@ export default function Profile() {
 
   const handleManageSubscription = () => {
     window.open('https://billing.stripe.com/p/login/28EeVdg045s40cf70CbV600', '_blank');
+  };
+
+  const handleRefreshSubscription = async () => {
+    setRefreshing(true);
+    try {
+      const { error } = await supabase.functions.invoke('verify-subscription');
+      
+      if (error) throw error;
+
+      await refreshSubscription();
+      
+      toast({
+        title: "Subscription synced!",
+        description: "Your subscription has been updated from Stripe.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sync subscription",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleUpgrade = async () => {
@@ -156,23 +181,62 @@ export default function Profile() {
 
               <div className="flex gap-3">
                 {isFree ? (
-                  <Button 
-                    onClick={handleUpgrade} 
-                    disabled={loading}
-                    className="gradient-primary"
-                    size="lg"
-                  >
-                    <Zap className="h-4 w-4 mr-2" />
-                    Upgrade to Pro - {subscription?.pricing_tier === 'early_bird' ? '$19' : '$49'}/month
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handleUpgrade} 
+                      disabled={loading}
+                      className="gradient-primary"
+                      size="lg"
+                    >
+                      <Zap className="h-4 w-4 mr-2" />
+                      Upgrade to Pro - {subscription?.pricing_tier === 'early_bird' ? '$19' : '$49'}/month
+                    </Button>
+                    <Button
+                      onClick={handleRefreshSubscription}
+                      disabled={refreshing}
+                      variant="outline"
+                      size="lg"
+                    >
+                      {refreshing ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Refresh Subscription
+                        </>
+                      )}
+                    </Button>
+                  </>
                 ) : !isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    onClick={handleManageSubscription}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Manage Subscription
-                  </Button>
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleManageSubscription}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Manage Subscription
+                    </Button>
+                    <Button
+                      onClick={handleRefreshSubscription}
+                      disabled={refreshing}
+                      variant="outline"
+                    >
+                      {refreshing ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Sync from Stripe
+                        </>
+                      )}
+                    </Button>
+                  </>
                 )}
               </div>
 
