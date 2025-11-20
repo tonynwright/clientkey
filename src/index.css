@@ -48,6 +48,21 @@ All colors MUST be HSL.
     --disc-c: 210 70% 55%;
     --disc-c-foreground: 0 0% 100%;
 
+    /* Premium Visual Effects */
+    --gradient-primary: linear-gradient(135deg, hsl(215 90% 60%) 0%, hsl(215 85% 50%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(210 20% 99%) 0%, hsl(210 20% 96%) 100%);
+    --gradient-disc-d: linear-gradient(135deg, hsl(0 70% 55%) 0%, hsl(0 65% 45%) 100%);
+    --gradient-disc-i: linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(45 85% 45%) 100%);
+    --gradient-disc-s: linear-gradient(135deg, hsl(140 50% 50%) 0%, hsl(140 45% 40%) 100%);
+    --gradient-disc-c: linear-gradient(135deg, hsl(210 70% 55%) 0%, hsl(210 65% 45%) 100%);
+
+    --shadow-elegant: 0 10px 30px -10px hsl(220 15% 20% / 0.1);
+    --shadow-glow-primary: 0 0 40px hsl(215 90% 55% / 0.3);
+    --shadow-glow-d: 0 0 30px hsl(0 70% 55% / 0.25);
+    --shadow-glow-i: 0 0 30px hsl(45 90% 55% / 0.25);
+    --shadow-glow-s: 0 0 30px hsl(140 50% 50% / 0.25);
+    --shadow-glow-c: 0 0 30px hsl(210 70% 55% / 0.25);
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -97,6 +112,21 @@ All colors MUST be HSL.
     --disc-c: 210 65% 60%;
     --disc-c-foreground: 0 0% 100%;
 
+    /* Premium Visual Effects - Dark Mode */
+    --gradient-primary: linear-gradient(135deg, hsl(215 90% 65%) 0%, hsl(215 85% 55%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(220 20% 14%) 0%, hsl(220 20% 11%) 100%);
+    --gradient-disc-d: linear-gradient(135deg, hsl(0 65% 50%) 0%, hsl(0 60% 40%) 100%);
+    --gradient-disc-i: linear-gradient(135deg, hsl(45 85% 60%) 0%, hsl(45 80% 50%) 100%);
+    --gradient-disc-s: linear-gradient(135deg, hsl(140 45% 45%) 0%, hsl(140 40% 35%) 100%);
+    --gradient-disc-c: linear-gradient(135deg, hsl(210 65% 60%) 0%, hsl(210 60% 50%) 100%);
+
+    --shadow-elegant: 0 10px 30px -10px hsl(0 0% 0% / 0.3);
+    --shadow-glow-primary: 0 0 40px hsl(215 90% 60% / 0.4);
+    --shadow-glow-d: 0 0 30px hsl(0 65% 50% / 0.3);
+    --shadow-glow-i: 0 0 30px hsl(45 85% 60% / 0.3);
+    --shadow-glow-s: 0 0 30px hsl(140 45% 45% / 0.3);
+    --shadow-glow-c: 0 0 30px hsl(210 65% 60% / 0.3);
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -119,5 +149,43 @@ All colors MUST be HSL.
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .glass-hover {
+    @apply transition-all duration-300 hover:bg-card/90 hover:shadow-[0_0_40px_hsl(var(--primary)/0.15)];
+  }
+
+  .shadow-glow {
+    box-shadow: var(--shadow-glow-primary);
+  }
+
+  .shadow-glow-d {
+    box-shadow: var(--shadow-glow-d);
+  }
+
+  .shadow-glow-i {
+    box-shadow: var(--shadow-glow-i);
+  }
+
+  .shadow-glow-s {
+    box-shadow: var(--shadow-glow-s);
+  }
+
+  .shadow-glow-c {
+    box-shadow: var(--shadow-glow-c);
+  }
+
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
   }
 }
