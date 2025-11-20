@@ -161,19 +161,90 @@ Deno.serve(async (req) => {
 
     console.log(`Seeding demo data for user: ${user.id}`);
 
-    // Check if user already has clients to avoid duplicates
-    const { count: existingCount } = await supabase
+    // Clean up existing demo data before seeding
+    const demoEmails = demoClients.map(c => c.email);
+    const demoStaffEmails = demoStaff.map(s => s.email);
+    
+    console.log('Checking for existing demo data...');
+    
+    // Find existing demo clients
+    const { data: existingDemoClients } = await supabase
       .from('clients')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if (existingCount && existingCount > 10) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Account already has significant data. Clear existing clients first or use a new account.' 
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      .select('id')
+      .eq('user_id', user.id)
+      .in('email', demoEmails);
+    
+    if (existingDemoClients && existingDemoClients.length > 0) {
+      console.log(`Found ${existingDemoClients.length} existing demo clients, cleaning up...`);
+      
+      const demoClientIds = existingDemoClients.map(c => c.id);
+      
+      // Delete related data in order (respecting foreign keys)
+      // 1. Delete disc_insights
+      const { error: insightsDeleteError } = await supabase
+        .from('disc_insights')
+        .delete()
+        .in('client_id', demoClientIds);
+      
+      if (insightsDeleteError) {
+        console.error('Error deleting demo insights:', insightsDeleteError);
+      }
+      
+      // 2. Delete assessments
+      const { error: assessmentsDeleteError } = await supabase
+        .from('assessments')
+        .delete()
+        .in('client_id', demoClientIds);
+      
+      if (assessmentsDeleteError) {
+        console.error('Error deleting demo assessments:', assessmentsDeleteError);
+      }
+      
+      // 3. Delete email tracking
+      const { error: trackingDeleteError } = await supabase
+        .from('email_tracking')
+        .delete()
+        .in('client_id', demoClientIds);
+      
+      if (trackingDeleteError) {
+        console.error('Error deleting demo email tracking:', trackingDeleteError);
+      }
+      
+      // 4. Delete clients
+      const { error: clientsDeleteError } = await supabase
+        .from('clients')
+        .delete()
+        .in('id', demoClientIds);
+      
+      if (clientsDeleteError) {
+        console.error('Error deleting demo clients:', clientsDeleteError);
+        throw clientsDeleteError;
+      }
+      
+      console.log('Successfully cleaned up existing demo clients and related data');
+    }
+    
+    // Clean up existing demo staff
+    const { data: existingDemoStaff } = await supabase
+      .from('staff')
+      .select('id')
+      .eq('user_id', user.id)
+      .in('email', demoStaffEmails);
+    
+    if (existingDemoStaff && existingDemoStaff.length > 0) {
+      console.log(`Found ${existingDemoStaff.length} existing demo staff, cleaning up...`);
+      
+      const { error: staffDeleteError } = await supabase
+        .from('staff')
+        .delete()
+        .in('id', existingDemoStaff.map(s => s.id));
+      
+      if (staffDeleteError) {
+        console.error('Error deleting demo staff:', staffDeleteError);
+        throw staffDeleteError;
+      }
+      
+      console.log('Successfully cleaned up existing demo staff');
     }
 
     // Insert all demo clients
