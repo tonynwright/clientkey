@@ -511,9 +511,16 @@ const Dashboard = () => {
               <Mail className="h-4 w-4" />
               Emails
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="gap-2">
+            <TabsTrigger 
+              value="analytics" 
+              className="gap-2"
+              disabled={subscription?.pricing_tier === 'free' && !isAdmin}
+            >
               <TrendingUp className="h-4 w-4" />
               Analytics
+              {subscription?.pricing_tier === 'free' && !isAdmin && (
+                <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -641,9 +648,59 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="analytics">
-            <div className="max-w-6xl mx-auto">
-              <EmailAnalytics />
-            </div>
+            {subscription?.pricing_tier === 'free' && !isAdmin ? (
+              <Card className="border-primary">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <TrendingUp className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">Email Analytics is a Pro Feature</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Unlock advanced email analytics to track open rates, click rates, and completion rates for your assessment invitations.
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                        <h4 className="font-semibold mb-2">With Pro, you get:</h4>
+                        <ul className="text-sm space-y-2 text-left max-w-md mx-auto">
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Real-time email engagement tracking
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Visual engagement funnel charts
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Actionable insights and recommendations
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Track performance over time
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Up to 300 clients and 300 staff members
+                          </li>
+                        </ul>
+                      </div>
+                      <Button 
+                        size="lg"
+                        onClick={() => setShowUpgradeDialog(true)}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Upgrade to Pro
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="max-w-6xl mx-auto">
+                <EmailAnalytics />
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="settings">
