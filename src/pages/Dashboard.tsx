@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +25,7 @@ import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
 import { StaffManagement } from "@/components/StaffManagement";
 import { StaffClientMatching } from "@/components/StaffClientMatching";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users } from "lucide-react";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2 } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -390,9 +391,16 @@ const Dashboard = () => {
               <Users className="h-4 w-4" />
               Staff
             </TabsTrigger>
-            <TabsTrigger value="matching" className="gap-2">
+            <TabsTrigger 
+              value="matching" 
+              className="gap-2"
+              disabled={subscription?.pricing_tier === 'free' && !isAdmin}
+            >
               <Target className="h-4 w-4" />
               Matching
+              {subscription?.pricing_tier === 'free' && !isAdmin && (
+                <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
+              )}
             </TabsTrigger>
             <TabsTrigger value="comparison" className="gap-2">
               <GitCompare className="h-4 w-4" />
@@ -467,7 +475,53 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="matching">
-            <StaffClientMatching />
+            {subscription?.pricing_tier === 'free' && !isAdmin ? (
+              <Card className="border-primary">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Target className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">Staff-Client Matching is a Pro Feature</h3>
+                      <p className="text-muted-foreground mb-6">
+                        Unlock AI-powered compatibility analysis to find the perfect staff-client pairings based on DISC personality profiles.
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                        <h4 className="font-semibold mb-2">With Pro, you get:</h4>
+                        <ul className="text-sm space-y-2 text-left max-w-md mx-auto">
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            AI-powered compatibility scoring
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Detailed strengths & challenges analysis
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Optimal staff assignment recommendations
+                          </li>
+                          <li className="flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-primary" />
+                            Up to 300 clients and 300 staff members
+                          </li>
+                        </ul>
+                      </div>
+                      <Button 
+                        size="lg"
+                        onClick={() => setShowUpgradeDialog(true)}
+                      >
+                        <Zap className="h-4 w-4 mr-2" />
+                        Upgrade to Pro
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <StaffClientMatching />
+            )}
           </TabsContent>
 
           <TabsContent value="settings">
