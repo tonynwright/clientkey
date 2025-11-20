@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
+import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2, TrendingUp, Bug } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -20,6 +20,7 @@ export default function Profile() {
   const [refreshing, setRefreshing] = useState(false);
   const [payments, setPayments] = useState<any[]>([]);
   const [growthData, setGrowthData] = useState<any[]>([]);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -441,6 +442,78 @@ export default function Profile() {
                   )}
                 </div>
               </CardContent>
+            </Card>
+          )}
+
+          {/* Debug Panel */}
+          {!isAdmin && subscription && (
+            <Card className="glass animate-fade-up stagger-3">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bug className="h-5 w-5 text-muted-foreground" />
+                    <CardTitle className="text-lg">Subscription Debug Info</CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowDebug(!showDebug)}
+                  >
+                    {showDebug ? "Hide" : "Show"}
+                  </Button>
+                </div>
+                <CardDescription>Raw subscription data for troubleshooting</CardDescription>
+              </CardHeader>
+              {showDebug && (
+                <CardContent>
+                  <div className="rounded-lg bg-muted/30 p-4 font-mono text-xs space-y-3">
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Pricing Tier:</span>
+                      <span className="font-semibold">{subscription.pricing_tier || 'N/A'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className="font-semibold">{subscription.status || 'N/A'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Monthly Price:</span>
+                      <span className="font-semibold">${(subscription.monthly_price / 100).toFixed(2)}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Stripe Customer ID:</span>
+                      <span className="break-all">{subscription.stripe_customer_id || 'Not set'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Stripe Sub ID:</span>
+                      <span className="break-all">{subscription.stripe_subscription_id || 'Not set'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Period Start:</span>
+                      <span>{subscription.current_period_start ? format(new Date(subscription.current_period_start), 'PPpp') : 'Not set'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Period End:</span>
+                      <span>{subscription.current_period_end ? format(new Date(subscription.current_period_end), 'PPpp') : 'Not set'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Cancel at End:</span>
+                      <span className="font-semibold">{subscription.cancel_at_period_end ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Created At:</span>
+                      <span>{format(new Date(subscription.created_at), 'PPpp')}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Updated At:</span>
+                      <span>{format(new Date(subscription.updated_at), 'PPpp')}</span>
+                    </div>
+                    <div className="grid grid-cols-[140px_1fr] gap-2">
+                      <span className="text-muted-foreground">Client Count:</span>
+                      <span className="font-semibold">{clientCount} / {clientLimit}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
             </Card>
           )}
 
