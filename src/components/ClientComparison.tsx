@@ -11,11 +11,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Users } from "lucide-react";
+import { Download, Users, Zap } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { ComparisonReportPDF } from "./ComparisonReportPDF";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface ClientComparisonProps {
+  onUpgrade?: () => void;
+}
 
 interface Client {
   id: string;
@@ -55,10 +60,12 @@ const COMPATIBILITY_MATRIX = {
   CC: { score: 80, level: "Good", color: "text-green-600" },
 };
 
-export const ClientComparison = () => {
+export const ClientComparison = ({ onUpgrade }: ClientComparisonProps = {}) => {
   const { toast } = useToast();
   const [staffId, setStaffId] = useState<string>("");
   const [clientId, setClientId] = useState<string>("");
+  const { subscription, isAdmin } = useAuth();
+  const isPaidUser = subscription?.pricing_tier !== 'free' || isAdmin;
 
   const { data: clients } = useQuery({
     queryKey: ["profiled-clients"],
@@ -102,6 +109,19 @@ export const ClientComparison = () => {
   const compatibility = getCompatibility();
 
   const handleExport = async () => {
+    // Check if user is paid
+    if (!isPaidUser) {
+      toast({
+        title: "Premium Feature",
+        description: "PDF exports are available on the Pro plan. Upgrade to download compatibility reports.",
+        variant: "destructive",
+      });
+      if (onUpgrade) {
+        onUpgrade();
+      }
+      return;
+    }
+
     if (!selectedStaff || !selectedClient || !selectedStaff.disc_type || !selectedClient.disc_type) {
       toast({
         title: "Cannot export",
@@ -288,9 +308,16 @@ export const ClientComparison = () => {
               })}
             </div>
 
-            <Button onClick={handleExport} className="w-full gap-2" size="lg">
+            <Button 
+              onClick={handleExport} 
+              className="w-full gap-2" 
+              size="lg"
+              disabled={!isPaidUser}
+              title={isPaidUser ? "Download Compatibility Report" : "Upgrade to download reports"}
+            >
               <Download className="h-5 w-5" />
               Download Compatibility Report
+              {!isPaidUser && <Zap className="h-4 w-4 ml-2 text-primary-foreground" />}
             </Button>
           </div>
         )}
