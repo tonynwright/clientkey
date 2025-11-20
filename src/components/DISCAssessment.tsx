@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { CustomRadio } from "./CustomRadio";
 
 export const DISC_QUESTIONS = [
   {
@@ -230,27 +229,28 @@ export const DISCAssessment = ({ onComplete }: DISCAssessmentProps) => {
 
       <div className="max-h-[500px] space-y-4 overflow-y-auto pr-2">
         {DISC_QUESTIONS.map((q) => (
-          <Card key={q.id} className="border border-border bg-card p-4">
-            <p className="mb-3 font-medium text-foreground">
+          <Card key={q.id} className="border border-border/50 bg-gradient-subtle p-5">
+            <p className="mb-4 text-base font-semibold text-foreground">
               {q.id}. Choose the statement that best describes you:
             </p>
-            <RadioGroup
-              value={responses[q.id]}
-              onValueChange={(val) => handleSelect(q.id, val as "A" | "B")}
-            >
-              <div className="flex items-start space-x-3 rounded-md border border-border bg-background p-3 hover:bg-accent/50 transition-colors">
-                <RadioGroupItem value="A" id={`${q.id}-a`} />
-                <Label htmlFor={`${q.id}-a`} className="flex-1 cursor-pointer text-sm">
-                  {q.optionA}
-                </Label>
-              </div>
-              <div className="flex items-start space-x-3 rounded-md border border-border bg-background p-3 hover:bg-accent/50 transition-colors">
-                <RadioGroupItem value="B" id={`${q.id}-b`} />
-                <Label htmlFor={`${q.id}-b`} className="flex-1 cursor-pointer text-sm">
-                  {q.optionB}
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="space-y-3">
+              <CustomRadio
+                id={`${q.id}-a`}
+                value="A"
+                checked={responses[q.id] === "A"}
+                onChange={() => handleSelect(q.id, "A")}
+                label={q.optionA}
+                discType={q.aType as "D" | "I" | "S" | "C"}
+              />
+              <CustomRadio
+                id={`${q.id}-b`}
+                value="B"
+                checked={responses[q.id] === "B"}
+                onChange={() => handleSelect(q.id, "B")}
+                label={q.optionB}
+                discType={q.bType as "D" | "I" | "S" | "C"}
+              />
+            </div>
           </Card>
         ))}
       </div>
