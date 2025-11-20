@@ -14,7 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      disc_assessments: {
+        Row: {
+          assessment_data: Json | null
+          c_score: number
+          client_id: string
+          created_at: string
+          d_score: number
+          i_score: number
+          id: string
+          primary_type: string
+          s_score: number
+        }
+        Insert: {
+          assessment_data?: Json | null
+          c_score?: number
+          client_id: string
+          created_at?: string
+          d_score?: number
+          i_score?: number
+          id?: string
+          primary_type: string
+          s_score?: number
+        }
+        Update: {
+          assessment_data?: Json | null
+          c_score?: number
+          client_id?: string
+          created_at?: string
+          d_score?: number
+          i_score?: number
+          id?: string
+          primary_type?: string
+          s_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disc_assessments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
