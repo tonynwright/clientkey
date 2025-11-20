@@ -13,6 +13,65 @@ interface DemoClient {
   disc_scores: { D: number; I: number; S: number; C: number };
 }
 
+interface DemoStaff {
+  name: string;
+  email: string;
+  role: string;
+  disc_type: string;
+  disc_scores: { D: number; I: number; S: number; C: number };
+}
+
+const demoStaff: DemoStaff[] = [
+  // Account Managers - mix of types
+  { name: "Alex Thompson", email: "alex.t@agency.com", role: "Senior Account Manager", disc_type: "I", disc_scores: { D: 22, I: 35, S: 20, C: 11 } },
+  { name: "Jordan Lee", email: "jordan.l@agency.com", role: "Account Manager", disc_type: "S", disc_scores: { D: 14, I: 20, S: 38, C: 16 } },
+  { name: "Morgan Davis", email: "morgan.d@agency.com", role: "Account Manager", disc_type: "D", disc_scores: { D: 36, I: 21, S: 12, C: 19 } },
+  
+  // Project Managers
+  { name: "Casey Wilson", email: "casey.w@agency.com", role: "Project Manager", disc_type: "C", disc_scores: { D: 16, I: 13, S: 21, C: 38 } },
+  { name: "Riley Martinez", email: "riley.m@agency.com", role: "Senior Project Manager", disc_type: "S", disc_scores: { D: 15, I: 19, S: 36, C: 18 } },
+  
+  // Creatives
+  { name: "Avery Chen", email: "avery.c@agency.com", role: "Creative Director", disc_type: "I", disc_scores: { D: 24, I: 34, S: 18, C: 12 } },
+  { name: "Quinn Taylor", email: "quinn.t@agency.com", role: "Designer", disc_type: "C", disc_scores: { D: 14, I: 16, S: 19, C: 39 } },
+  
+  // Strategy
+  { name: "Sam Rodriguez", email: "sam.r@agency.com", role: "Strategy Lead", disc_type: "C", disc_scores: { D: 18, I: 12, S: 20, C: 38 } },
+  { name: "Parker Williams", email: "parker.w@agency.com", role: "Digital Strategist", disc_type: "D", disc_scores: { D: 34, I: 23, S: 13, C: 18 } },
+  
+  // Client Success
+  { name: "Dakota Brown", email: "dakota.b@agency.com", role: "Client Success Manager", disc_type: "S", disc_scores: { D: 13, I: 22, S: 37, C: 16 } },
+  { name: "Sage Anderson", email: "sage.a@agency.com", role: "Client Success Lead", disc_type: "I", disc_scores: { D: 20, I: 36, S: 21, C: 11 } },
+  
+  // Analytics
+  { name: "River Kim", email: "river.k@agency.com", role: "Analytics Manager", disc_type: "C", disc_scores: { D: 17, I: 11, S: 18, C: 42 } },
+  { name: "Skyler White", email: "skyler.w@agency.com", role: "Data Analyst", disc_type: "C", disc_scores: { D: 15, I: 14, S: 20, C: 39 } },
+  
+  // Sales/BD
+  { name: "Phoenix Garcia", email: "phoenix.g@agency.com", role: "Business Development", disc_type: "D", disc_scores: { D: 37, I: 24, S: 11, C: 16 } },
+  { name: "Peyton Miller", email: "peyton.m@agency.com", role: "Sales Executive", disc_type: "I", disc_scores: { D: 25, I: 35, S: 19, C: 9 } },
+  
+  // Operations
+  { name: "Cameron Johnson", email: "cameron.j@agency.com", role: "Operations Manager", disc_type: "S", disc_scores: { D: 16, I: 18, S: 35, C: 19 } },
+  { name: "Finley Davis", email: "finley.d@agency.com", role: "Operations Coordinator", disc_type: "C", disc_scores: { D: 14, I: 15, S: 22, C: 37 } },
+  
+  // Content
+  { name: "Reese Martin", email: "reese.m@agency.com", role: "Content Lead", disc_type: "I", disc_scores: { D: 19, I: 33, S: 23, C: 13 } },
+  { name: "Jamie Lopez", email: "jamie.l@agency.com", role: "Content Writer", disc_type: "S", disc_scores: { D: 12, I: 21, S: 36, C: 19 } },
+  
+  // Technical
+  { name: "Taylor Wilson", email: "taylor.w@agency.com", role: "Tech Lead", disc_type: "C", disc_scores: { D: 19, I: 13, S: 17, C: 39 } },
+  { name: "Drew Moore", email: "drew.m@agency.com", role: "Developer", disc_type: "C", disc_scores: { D: 16, I: 12, S: 21, C: 39 } },
+  
+  // Media
+  { name: "Blake Thomas", email: "blake.t@agency.com", role: "Media Buyer", disc_type: "D", disc_scores: { D: 33, I: 22, S: 14, C: 19 } },
+  { name: "Jesse Jackson", email: "jesse.j@agency.com", role: "Media Planner", disc_type: "C", disc_scores: { D: 17, I: 14, S: 19, C: 38 } },
+  
+  // Leadership
+  { name: "Charlie Harris", email: "charlie.h@agency.com", role: "VP of Client Services", disc_type: "D", disc_scores: { D: 38, I: 23, S: 10, C: 17 } },
+  { name: "Avery Clark", email: "avery.clark@agency.com", role: "Managing Director", disc_type: "I", disc_scores: { D: 28, I: 34, S: 16, C: 10 } },
+];
+
 const demoClients: DemoClient[] = [
   // Dominant (D) types
   { name: "Marcus Chen", email: "marcus.chen@techcorp.com", company: "TechCorp Industries", disc_type: "D", disc_scores: { D: 35, I: 20, S: 15, C: 18 } },
@@ -139,6 +198,28 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully inserted ${insertedClients?.length} clients`);
 
+    // Insert all demo staff
+    const staffToInsert = demoStaff.map(staff => ({
+      user_id: user.id,
+      name: staff.name,
+      email: staff.email,
+      role: staff.role,
+      disc_type: staff.disc_type,
+      disc_scores: staff.disc_scores,
+    }));
+
+    const { data: insertedStaff, error: staffError } = await supabase
+      .from('staff')
+      .insert(staffToInsert)
+      .select();
+
+    if (staffError) {
+      console.error('Error inserting staff:', staffError);
+      throw staffError;
+    }
+
+    console.log(`Successfully inserted ${insertedStaff?.length} staff members`);
+
     // Create assessments for each client
     const assessmentsToInsert = insertedClients?.map((client, index) => {
       const originalClient = demoClients[index];
@@ -190,8 +271,9 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Successfully created 25 demo clients with diverse DISC profiles and AI insights`,
+        message: `Successfully created 25 demo clients and 25 staff members with diverse DISC profiles and AI insights`,
         clientsCreated: insertedClients?.length,
+        staffCreated: insertedStaff?.length,
         assessmentsCreated: assessmentsToInsert.length,
         insightsGenerated: successfulInsights,
       }),
