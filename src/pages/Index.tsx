@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,8 @@ import { DISCBackground } from "@/components/DISCBackground";
 import { DISCShape } from "@/components/DISCShape";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -15,6 +17,8 @@ export default function Index() {
   const problemSection = useScrollAnimation({ threshold: 0.3 });
   const stepsSection = useScrollAnimation({ threshold: 0.2 });
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [demoLoading, setDemoLoading] = useState(false);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -22,6 +26,28 @@ export default function Index() {
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: 'demo@clientkey.com',
+        password: 'demo123456',
+      });
+
+      if (error) throw error;
+
+      navigate('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Demo Access Error",
+        description: "Unable to access demo account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDemoLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
@@ -52,14 +78,19 @@ export default function Index() {
           <Button 
             size="lg" 
             variant="outline"
-            className="text-lg px-8 py-6 hover:scale-105 transition-transform"
-            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+            className="text-lg px-8 py-6 hover:scale-105 transition-transform border-2"
+            onClick={handleDemoLogin}
+            disabled={demoLoading}
           >
-            View Pricing
+            {demoLoading ? "Loading Demo..." : "🎯 View Live Demo"}
           </Button>
         </div>
+        
+        <p className="text-sm text-muted-foreground mb-8 animate-fade-up stagger-4">
+          👆 Try the demo account to explore ClientKey with 25 sample clients
+        </p>
 
-        <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground animate-fade-up stagger-4">
+        <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground animate-fade-up stagger-5">
           <div className="flex items-center gap-2">
             <Check className="h-5 w-5 text-primary" />
             No credit card required
