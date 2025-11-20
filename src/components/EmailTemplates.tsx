@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Mail, Palette } from "lucide-react";
+import { Loader2, Mail, Palette, Code, Eye } from "lucide-react";
 
 interface EmailTemplate {
   id: string;
@@ -142,100 +143,146 @@ function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorPr
     onUpdate({ ...template, [field]: value });
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="subject">Subject Line</Label>
-        <Input
-          id="subject"
-          value={template.subject}
-          onChange={(e) => handleChange("subject", e.target.value)}
-          placeholder="Email subject"
-        />
-      </div>
+  // Generate preview with sample data
+  const previewHtml = useMemo(() => {
+    const sampleData = {
+      '{{CLIENT_NAME}}': 'John Smith',
+      '{{ASSESSMENT_LINK}}': '#assessment-preview',
+      '{{PRIMARY_COLOR}}': template.primary_color || '#4F46E5',
+      '{{BILLING_PORTAL_LINK}}': 'https://billing.stripe.com/p/login/example',
+    };
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    let html = template.content;
+    Object.entries(sampleData).forEach(([key, value]) => {
+      html = html.split(key).join(value);
+    });
+
+    return html;
+  }, [template.content, template.primary_color]);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Editor Section */}
+      <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="company-name">Company Name</Label>
+          <Label htmlFor="subject">Subject Line</Label>
           <Input
-            id="company-name"
-            value={template.company_name || ""}
-            onChange={(e) => handleChange("company_name", e.target.value)}
-            placeholder="Your Company Name"
+            id="subject"
+            value={template.subject}
+            onChange={(e) => handleChange("subject", e.target.value)}
+            placeholder="Email subject"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="company-name">Company Name</Label>
+            <Input
+              id="company-name"
+              value={template.company_name || ""}
+              onChange={(e) => handleChange("company_name", e.target.value)}
+              placeholder="Your Company Name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="primary-color" className="flex items-center gap-2">
+              <Palette className="h-4 w-4" />
+              Primary Color
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="primary-color"
+                type="color"
+                value={template.primary_color}
+                onChange={(e) => handleChange("primary_color", e.target.value)}
+                className="w-20 h-10 p-1 cursor-pointer"
+              />
+              <Input
+                value={template.primary_color}
+                onChange={(e) => handleChange("primary_color", e.target.value)}
+                placeholder="#4F46E5"
+                className="flex-1"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="company-logo">Company Logo URL (Optional)</Label>
+          <Input
+            id="company-logo"
+            value={template.company_logo_url || ""}
+            onChange={(e) => handleChange("company_logo_url", e.target.value)}
+            placeholder="https://example.com/logo.png"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="primary-color" className="flex items-center gap-2">
-            <Palette className="h-4 w-4" />
-            Primary Color
-          </Label>
-          <div className="flex gap-2">
-            <Input
-              id="primary-color"
-              type="color"
-              value={template.primary_color}
-              onChange={(e) => handleChange("primary_color", e.target.value)}
-              className="w-20 h-10 p-1 cursor-pointer"
-            />
-            <Input
-              value={template.primary_color}
-              onChange={(e) => handleChange("primary_color", e.target.value)}
-              placeholder="#4F46E5"
-              className="flex-1"
+          <div className="flex items-center justify-between">
+            <Label htmlFor="content">Email Content</Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCode(!showCode)}
+            >
+              {showCode ? (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </>
+              ) : (
+                <>
+                  <Code className="h-4 w-4 mr-2" />
+                  Edit Code
+                </>
+              )}
+            </Button>
+          </div>
+          {showCode && (
+            <>
+              <Textarea
+                id="content"
+                value={template.content}
+                onChange={(e) => handleChange("content", e.target.value)}
+                placeholder="Email HTML content"
+                className="min-h-[300px] font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
+              </p>
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={() => onSave(template)} disabled={saving}>
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Template
+          </Button>
+        </div>
+      </div>
+
+      {/* Preview Section */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Live Preview</Label>
+          <Badge variant="secondary" className="text-xs">
+            Real-time preview with sample data
+          </Badge>
+        </div>
+        <div className="border rounded-lg bg-muted/30 p-4 min-h-[500px] max-h-[700px] overflow-auto">
+          <div className="bg-white rounded-md shadow-sm">
+            <div 
+              className="p-6"
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
             />
           </div>
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="company-logo">Company Logo URL (Optional)</Label>
-        <Input
-          id="company-logo"
-          value={template.company_logo_url || ""}
-          onChange={(e) => handleChange("company_logo_url", e.target.value)}
-          placeholder="https://example.com/logo.png"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="content">Email Content</Label>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCode(!showCode)}
-          >
-            {showCode ? "Hide Code" : "Show Code"}
-          </Button>
-        </div>
-        {showCode ? (
-          <>
-            <Textarea
-              id="content"
-              value={template.content}
-              onChange={(e) => handleChange("content", e.target.value)}
-              placeholder="Email HTML content"
-              className="min-h-[300px] font-mono text-sm"
-            />
-            <p className="text-sm text-muted-foreground">
-              Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
-            </p>
-          </>
-        ) : (
-          <div 
-            className="min-h-[200px] border rounded-md p-4 bg-muted/30 overflow-auto"
-            dangerouslySetInnerHTML={{ __html: template.content }}
-          />
-        )}
-      </div>
-
-      <div className="flex justify-end">
-        <Button onClick={() => onSave(template)} disabled={saving}>
-          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Template
-        </Button>
+        <p className="text-xs text-muted-foreground">
+          Preview shows sample data: John Smith as client name, with placeholder links
+        </p>
       </div>
     </div>
   );
