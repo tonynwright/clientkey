@@ -13,7 +13,8 @@ import { DISCAssessment } from "@/components/DISCAssessment";
 import { ClientDashboard } from "@/components/ClientDashboard";
 import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
-import { UserPlus, LayoutDashboard, FileText, Target, Download } from "lucide-react";
+import { ClientComparison } from "@/components/ClientComparison";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -231,7 +232,7 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
+          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -239,6 +240,10 @@ const Index = () => {
             <TabsTrigger value="add-client" className="gap-2">
               <UserPlus className="h-4 w-4" />
               Add Client
+            </TabsTrigger>
+            <TabsTrigger value="comparison" className="gap-2">
+              <GitCompare className="h-4 w-4" />
+              Compare
             </TabsTrigger>
           </TabsList>
 
@@ -294,6 +299,10 @@ const Index = () => {
                 </form>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="comparison">
+            <ClientComparison />
           </TabsContent>
         </Tabs>
       </main>
