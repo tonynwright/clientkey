@@ -634,7 +634,7 @@ const Dashboard = () => {
 
           <TabsContent value="emails">
             <div className="max-w-6xl mx-auto space-y-6">
-              <EmailTemplates />
+              <EmailTemplates onUpgrade={() => setShowUpgradeDialog(true)} />
               <ReminderSettings />
             </div>
           </TabsContent>
