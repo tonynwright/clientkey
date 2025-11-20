@@ -7,6 +7,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const toIso = (unix: number | null | undefined) => {
+  if (!unix || typeof unix !== "number") return null;
+  const date = new Date(unix * 1000);
+  return isNaN(date.getTime()) ? null : date.toISOString();
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -90,8 +96,8 @@ serve(async (req) => {
           pricing_tier: tier,
           monthly_price: tier === "early_bird" ? 1900 : 4900,
           status: subscription.status,
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_start: toIso(subscription.current_period_start as any),
+          current_period_end: toIso(subscription.current_period_end as any),
         })
         .eq("user_id", user.id);
     } else {
@@ -104,8 +110,8 @@ serve(async (req) => {
           pricing_tier: tier,
           monthly_price: tier === "early_bird" ? 1900 : 4900,
           status: subscription.status,
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_start: toIso(subscription.current_period_start as any),
+          current_period_end: toIso(subscription.current_period_end as any),
         });
 
       // Increment early bird counter if applicable
