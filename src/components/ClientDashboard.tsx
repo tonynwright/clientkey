@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award, Download } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -44,6 +44,32 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
       return data as Client[];
     },
   });
+
+  const handleSendInvite = async (client: Client) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("send-assessment-invite", {
+        body: {
+          clientId: client.id,
+          clientName: client.name,
+          clientEmail: client.email,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Invitation sent",
+        description: `Assessment invitation sent to ${client.email}`,
+      });
+    } catch (error) {
+      console.error("Error sending invite:", error);
+      toast({
+        title: "Failed to send invitation",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleExportPDF = async (client: Client) => {
     if (!client.disc_type || !client.disc_scores) {
@@ -213,6 +239,20 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
                   )}
 
                   <div className="flex gap-2">
+                    {!client.disc_type && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendInvite(client);
+                        }}
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Send Invite
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
