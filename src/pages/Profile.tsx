@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2 } from "lucide-react";
-import { format } from "date-fns";
+import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2, TrendingUp } from "lucide-react";
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 
 export default function Profile() {
   const { user, subscription, clientCount, clientLimit, isAdmin, signOut, refreshSubscription } = useAuth();
@@ -17,12 +19,55 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [payments, setPayments] = useState<any[]>([]);
+  const [growthData, setGrowthData] = useState<any[]>([]);
 
   useEffect(() => {
     if (!user) {
       navigate('/auth');
     }
   }, [user, navigate]);
+
+  useEffect(() => {
+    const fetchGrowthData = async () => {
+      if (!user) return;
+
+      const { data: clients, error } = await supabase
+        .from('clients')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (error || !clients) return;
+
+      // Generate last 6 months
+      const now = new Date();
+      const months = eachMonthOfInterval({
+        start: subMonths(now, 5),
+        end: now
+      });
+
+      // Count clients per month
+      const monthlyData = months.map(month => {
+        const monthStart = startOfMonth(month);
+        const monthEnd = endOfMonth(month);
+        
+        const count = clients.filter(client => {
+          const clientDate = new Date(client.created_at);
+          return clientDate >= monthStart && clientDate <= monthEnd;
+        }).length;
+
+        return {
+          month: format(month, 'MMM yyyy'),
+          clients: count,
+          cumulative: clients.filter(c => new Date(c.created_at) <= monthEnd).length
+        };
+      });
+
+      setGrowthData(monthlyData);
+    };
+
+    fetchGrowthData();
+  }, [user]);
 
   const handleManageSubscription = () => {
     window.open('https://billing.stripe.com/p/login/28EeVdg045s40cf70CbV600', '_blank');
@@ -257,6 +302,74 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Client Growth Chart */}
+          {!isAdmin && growthData.length > 0 && (
+            <Card className="glass animate-fade-up stagger-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Client Growth Trends
+                </CardTitle>
+                <CardDescription>Monthly client additions over the last 6 months</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer
+                  config={{
+                    clients: {
+                      label: "New Clients",
+                      color: "hsl(var(--primary))",
+                    },
+                    cumulative: {
+                      label: "Total Clients",
+                      color: "hsl(var(--accent))",
+                    },
+                  }}
+                  className="h-[300px] w-full"
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={growthData}>
+                      <defs>
+                        <linearGradient id="colorClients" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                      />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Area
+                        type="monotone"
+                        dataKey="clients"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorClients)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="text-center p-3 rounded-lg bg-primary/5">
+                    <p className="text-2xl font-bold text-primary">{growthData[growthData.length - 1]?.cumulative || 0}</p>
+                    <p className="text-sm text-muted-foreground">Total Clients</p>
+                  </div>
+                  <div className="text-center p-3 rounded-lg bg-accent/5">
+                    <p className="text-2xl font-bold text-accent">{growthData[growthData.length - 1]?.clients || 0}</p>
+                    <p className="text-sm text-muted-foreground">Added This Month</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Subscription Timeline (Paid users only) */}
           {!isFree && !isAdmin && subscription && (
