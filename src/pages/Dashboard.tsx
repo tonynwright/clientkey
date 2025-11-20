@@ -800,6 +800,7 @@ const Dashboard = () => {
                   clientName={selectedClient.name}
                   discType={selectedClient.disc_type}
                   discScores={selectedClient.disc_scores}
+                  onUpgrade={() => setShowUpgradeDialog(true)}
                 />
                 <div className="border-t pt-6">
                   <h3 className="text-lg font-semibold mb-4">Communication Playbook</h3>

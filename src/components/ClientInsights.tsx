@@ -3,11 +3,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, RefreshCw, Trash2, Download } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, Trash2, Download, Zap, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { pdf } from "@react-pdf/renderer";
 import { ClientInsightsPDF } from "./ClientInsightsPDF";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ClientInsightsProps {
   clientId: string;
@@ -19,11 +20,14 @@ interface ClientInsightsProps {
     S: number;
     C: number;
   };
+  onUpgrade?: () => void;
 }
 
-export const ClientInsights = ({ clientId, clientName, discType, discScores }: ClientInsightsProps) => {
+export const ClientInsights = ({ clientId, clientName, discType, discScores, onUpgrade }: ClientInsightsProps) => {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
+  const { subscription, isAdmin } = useAuth();
+  const isPaidUser = subscription?.pricing_tier !== 'free' || isAdmin;
 
   // Fetch existing insights
   const { data: savedInsights, isLoading } = useQuery({
@@ -134,6 +138,59 @@ export const ClientInsights = ({ clientId, clientName, discType, discScores }: C
   };
 
   const latestInsight = savedInsights?.[0];
+
+  // Show upgrade prompt for free users
+  if (!isPaidUser) {
+    return (
+      <Card className="border-primary">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-4 py-6">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+              <Sparkles className="h-8 w-8 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold mb-2">AI-Generated Insights is a Pro Feature</h3>
+              <p className="text-muted-foreground mb-6">
+                Unlock personalized AI-powered DISC insights that provide deep analysis and tailored communication strategies for each client.
+              </p>
+              <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold mb-2">With Pro, you get:</h4>
+                <ul className="text-sm space-y-2 text-left max-w-md mx-auto">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    Personalized AI analysis for each client
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    Tailored communication strategies
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    Behavioral insights and predictions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    PDF export of insights
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    Unlimited regeneration and updates
+                  </li>
+                </ul>
+              </div>
+              <Button 
+                size="lg"
+                onClick={onUpgrade}
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Upgrade to Pro
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
