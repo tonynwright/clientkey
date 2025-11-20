@@ -112,6 +112,66 @@ const Dashboard = () => {
     setActiveTab("add-client");
   };
 
+  const handleOnboardingTryDemo = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Create sample client
+      const { data: client, error: clientError } = await supabase
+        .from("clients")
+        .insert({
+          name: "Sarah Johnson",
+          email: "sarah.demo@example.com",
+          company: "Demo Company Inc.",
+          user_id: user.id,
+          disc_type: "I",
+          disc_scores: {
+            D: 15,
+            I: 32,
+            S: 22,
+            C: 18
+          }
+        })
+        .select()
+        .single();
+
+      if (clientError) throw clientError;
+
+      // Create sample assessment
+      const sampleResponses = Array.from({ length: 24 }, (_, i) => {
+        // Generate realistic responses favoring "I" type
+        const responses = ["D", "I", "S", "C"];
+        if (i % 3 === 0) return "I"; // Favor I responses
+        return responses[Math.floor(Math.random() * responses.length)];
+      });
+
+      await supabase
+        .from("assessments")
+        .insert({
+          client_id: client.id,
+          responses: sampleResponses,
+          scores: { D: 15, I: 32, S: 22, C: 18 },
+          dominant_type: "I"
+        });
+
+      toast({
+        title: "Demo client created!",
+        description: "Explore Sarah Johnson's profile to see how ClientKey works.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setActiveTab("clients");
+    } catch (error) {
+      console.error("Error creating demo client:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create demo client. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRestartOnboarding = () => {
     localStorage.removeItem('hasSeenOnboarding');
     setShowOnboarding(true);
@@ -504,6 +564,7 @@ const Dashboard = () => {
         open={showOnboarding}
         onComplete={handleOnboardingComplete}
         onCreateClient={handleOnboardingCreateClient}
+        onTryDemo={handleOnboardingTryDemo}
         onSkip={handleOnboardingSkip}
       />
     </div>

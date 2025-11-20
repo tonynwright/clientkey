@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, Users, Target, Mail, ArrowRight, ArrowLeft, Sparkles } from "lucide-react";
+import { CheckCircle2, Users, Target, Mail, ArrowRight, ArrowLeft, Sparkles, Zap } from "lucide-react";
 
 interface OnboardingProps {
   open: boolean;
   onComplete: () => void;
   onCreateClient: () => void;
+  onTryDemo: () => void;
   onSkip?: () => void;
 }
 
@@ -43,7 +44,7 @@ const DISC_TYPES = [
   }
 ];
 
-export function Onboarding({ open, onComplete, onCreateClient, onSkip }: OnboardingProps) {
+export function Onboarding({ open, onComplete, onCreateClient, onTryDemo, onSkip }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const totalSteps = 3;
 
@@ -77,6 +78,11 @@ export function Onboarding({ open, onComplete, onCreateClient, onSkip }: Onboard
   const handleCreateClientClick = () => {
     onComplete();
     onCreateClient();
+  };
+
+  const handleTryDemoClick = () => {
+    onComplete();
+    onTryDemo();
   };
 
   const progress = ((step + 1) / (totalSteps + 1)) * 100;
@@ -214,11 +220,10 @@ export function Onboarding({ open, onComplete, onCreateClient, onSkip }: Onboard
                   <Users className="h-8 w-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">
-                  Create Your First Client
+                  Ready to Get Started?
                 </h3>
                 <p className="text-muted-foreground max-w-xl mx-auto">
-                  Start by adding a client to your dashboard. You'll be able to send them 
-                  a DISC assessment and get personalized communication insights.
+                  Try our demo mode with a sample client, or create your first real client right away.
                 </p>
               </div>
 
@@ -315,17 +320,23 @@ export function Onboarding({ open, onComplete, onCreateClient, onSkip }: Onboard
               </Button>
             )}
           </div>
-          <div>
+          <div className="flex gap-2">
             {step < totalSteps ? (
               <Button onClick={handleNext}>
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             ) : (
-              <Button onClick={handleCreateClientClick}>
-                Create Your First Client
-                <Users className="h-4 w-4 ml-2" />
-              </Button>
+              <>
+                <Button onClick={handleTryDemoClick} variant="outline">
+                  <Zap className="h-4 w-4 mr-2" />
+                  Try Demo Mode
+                </Button>
+                <Button onClick={handleCreateClientClick}>
+                  Create Your First Client
+                  <Users className="h-4 w-4 ml-2" />
+                </Button>
+              </>
             )}
           </div>
         </DialogFooter>
