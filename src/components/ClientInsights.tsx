@@ -3,9 +3,11 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Sparkles, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, RefreshCw, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
+import { pdf } from "@react-pdf/renderer";
+import { ClientInsightsPDF } from "./ClientInsightsPDF";
 
 interface ClientInsightsProps {
   clientId: string;
@@ -98,6 +100,39 @@ export const ClientInsights = ({ clientId, clientName, discType, discScores }: C
     }
   };
 
+  const handleExportPDF = async () => {
+    if (!latestInsight) {
+      toast.error("No insights available to export");
+      return;
+    }
+
+    try {
+      toast("Generating PDF...");
+      
+      const blob = await pdf(
+        <ClientInsightsPDF
+          clientName={clientName}
+          discType={discType}
+          discScores={discScores}
+          insights={latestInsight.insights}
+          generatedDate={latestInsight.created_at}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${clientName.replace(/\s+/g, "_")}_AI_Insights.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast.success("PDF exported successfully!");
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      toast.error("Failed to export PDF. Please try again.");
+    }
+  };
+
   const latestInsight = savedInsights?.[0];
 
   return (
@@ -109,27 +144,39 @@ export const ClientInsights = ({ clientId, clientName, discType, discScores }: C
             Personalized analysis based on DISC profile
           </p>
         </div>
-        <Button
-          onClick={handleGenerate}
-          disabled={isGenerating}
-          size="sm"
-        >
-          {isGenerating ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Generating...
-            </>
-          ) : (
-            <>
-              {latestInsight ? (
-                <RefreshCw className="mr-2 h-4 w-4" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              {latestInsight ? 'Regenerate' : 'Generate'} Insights
-            </>
+        <div className="flex items-center gap-2">
+          {latestInsight && (
+            <Button
+              onClick={handleExportPDF}
+              variant="outline"
+              size="sm"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export PDF
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            size="sm"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                {latestInsight ? (
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                {latestInsight ? 'Regenerate' : 'Generate'} Insights
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
