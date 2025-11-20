@@ -127,7 +127,7 @@ serve(async (req) => {
         subscription: {
           tier,
           status: subscription.status,
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+          current_period_end: toIso(subscription.current_period_end as any),
         }
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
