@@ -101,6 +101,35 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
     }
   };
 
+  const handleSendReminders = async () => {
+    try {
+      toast({
+        title: "Checking for reminders...",
+        description: "This may take a moment",
+      });
+
+      const { data, error } = await supabase.functions.invoke("send-reminder-emails", {
+        body: { manual: true },
+      });
+
+      if (error) throw error;
+
+      const result = data as { sent: number; checked: number; needingReminders: number };
+      
+      toast({
+        title: "Reminders sent",
+        description: `Sent ${result.sent} reminder emails out of ${result.needingReminders} clients needing reminders`,
+      });
+    } catch (error) {
+      console.error("Error sending reminders:", error);
+      toast({
+        title: "Failed to send reminders",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleExportPDF = async (client: Client) => {
     if (!client.disc_type || !client.disc_scores) {
       toast({
@@ -163,6 +192,18 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-foreground">Dashboard Overview</h2>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={handleSendReminders}
+        >
+          <Mail className="h-4 w-4 mr-2" />
+          Send Reminders
+        </Button>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border border-border bg-card p-6">
           <div className="flex items-center gap-4">
