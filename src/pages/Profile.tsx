@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2, TrendingUp, Bug } from "lucide-react";
+import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2, TrendingUp, Bug, Copy } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -95,6 +95,40 @@ export default function Profile() {
       });
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleCopyDebugInfo = async () => {
+    if (!subscription) return;
+
+    const debugData = {
+      pricing_tier: subscription.pricing_tier,
+      status: subscription.status,
+      monthly_price: subscription.monthly_price,
+      stripe_customer_id: subscription.stripe_customer_id,
+      stripe_subscription_id: subscription.stripe_subscription_id,
+      current_period_start: subscription.current_period_start,
+      current_period_end: subscription.current_period_end,
+      cancel_at_period_end: subscription.cancel_at_period_end,
+      created_at: subscription.created_at,
+      updated_at: subscription.updated_at,
+      client_count: clientCount,
+      client_limit: clientLimit,
+      user_email: user?.email,
+    };
+
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(debugData, null, 2));
+      toast({
+        title: "Copied to clipboard!",
+        description: "Subscription data copied as JSON.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy to clipboard",
+        variant: "destructive",
+      });
     }
   };
 
@@ -496,13 +530,23 @@ export default function Profile() {
                     <Bug className="h-5 w-5 text-muted-foreground" />
                     <CardTitle className="text-lg">Subscription Debug Info</CardTitle>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowDebug(!showDebug)}
-                  >
-                    {showDebug ? "Hide" : "Show"}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyDebugInfo}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copy
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowDebug(!showDebug)}
+                    >
+                      {showDebug ? "Hide" : "Show"}
+                    </Button>
+                  </div>
                 </div>
                 <CardDescription>Raw subscription data for troubleshooting</CardDescription>
               </CardHeader>
