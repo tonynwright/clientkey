@@ -136,6 +136,8 @@ interface TemplateEditorProps {
 }
 
 function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorProps) {
+  const [showCode, setShowCode] = useState(false);
+  
   const handleChange = (field: keyof EmailTemplate, value: string) => {
     onUpdate({ ...template, [field]: value });
   };
@@ -197,17 +199,36 @@ function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorPr
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="content">Email Content (HTML)</Label>
-        <Textarea
-          id="content"
-          value={template.content}
-          onChange={(e) => handleChange("content", e.target.value)}
-          placeholder="Email HTML content"
-          className="min-h-[300px] font-mono text-sm"
-        />
-        <p className="text-sm text-muted-foreground">
-          Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
-        </p>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="content">Email Content</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCode(!showCode)}
+          >
+            {showCode ? "Hide Code" : "Show Code"}
+          </Button>
+        </div>
+        {showCode ? (
+          <>
+            <Textarea
+              id="content"
+              value={template.content}
+              onChange={(e) => handleChange("content", e.target.value)}
+              placeholder="Email HTML content"
+              className="min-h-[300px] font-mono text-sm"
+            />
+            <p className="text-sm text-muted-foreground">
+              Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
+            </p>
+          </>
+        ) : (
+          <div 
+            className="min-h-[200px] border rounded-md p-4 bg-muted/30 overflow-auto"
+            dangerouslySetInnerHTML={{ __html: template.content }}
+          />
+        )}
       </div>
 
       <div className="flex justify-end">

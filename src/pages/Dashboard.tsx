@@ -616,7 +616,43 @@ const Dashboard = () => {
             <div className="max-w-3xl mx-auto space-y-6">
               <Card>
                 <div className="p-6 space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between pb-4 border-b">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-foreground">Demo Account</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Access the demo account to explore ClientKey with sample data
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={async () => {
+                        try {
+                          await signOut();
+                          const { error } = await supabase.auth.signInWithPassword({
+                            email: 'demo@clientkey.com',
+                            password: 'demo123456',
+                          });
+                          if (error) throw error;
+                          navigate('/dashboard');
+                          toast({
+                            title: "Switched to demo account",
+                            description: "You're now viewing the demo environment",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Error",
+                            description: "Failed to access demo account",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                      variant="outline"
+                    >
+                      <Target className="h-4 w-4 mr-2" />
+                      Access Demo
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-2">
                     <div className="space-y-1">
                       <h3 className="text-lg font-semibold text-foreground">Getting Started Tour</h3>
                       <p className="text-sm text-muted-foreground">
