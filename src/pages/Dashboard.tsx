@@ -15,6 +15,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DISCAssessment } from "@/components/DISCAssessment";
 import { ClientDashboard } from "@/components/ClientDashboard";
+import { StaffManagement } from "@/components/StaffManagement";
+import { StaffClientMatching } from "@/components/StaffClientMatching";
+import { EmailTemplates } from "@/components/EmailTemplates";
+import { EmailAnalytics } from "@/components/EmailAnalytics";
+import { ReminderSettings } from "@/components/ReminderSettings";
 import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
@@ -23,9 +28,7 @@ import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
-import { StaffManagement } from "@/components/StaffManagement";
-import { StaffClientMatching } from "@/components/StaffClientMatching";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2 } from "lucide-react";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -476,7 +479,7 @@ const Dashboard = () => {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-6 mb-8">
+          <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-7 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -503,6 +506,14 @@ const Dashboard = () => {
             <TabsTrigger value="comparison" className="gap-2">
               <GitCompare className="h-4 w-4" />
               Compare
+            </TabsTrigger>
+            <TabsTrigger value="emails" className="gap-2">
+              <Mail className="h-4 w-4" />
+              Emails
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Analytics
             </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -620,6 +631,19 @@ const Dashboard = () => {
             ) : (
               <StaffClientMatching />
             )}
+          </TabsContent>
+
+          <TabsContent value="emails">
+            <div className="max-w-6xl mx-auto space-y-6">
+              <EmailTemplates />
+              <ReminderSettings />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <div className="max-w-6xl mx-auto">
+              <EmailAnalytics />
+            </div>
           </TabsContent>
 
           <TabsContent value="settings">
