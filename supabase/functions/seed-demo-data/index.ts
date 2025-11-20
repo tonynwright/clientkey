@@ -247,15 +247,20 @@ Deno.serve(async (req) => {
       console.log('Successfully cleaned up existing demo staff');
     }
 
-    // Insert all demo clients
-    const clientsToInsert = demoClients.map(client => ({
-      user_id: user.id,
-      name: client.name,
-      email: client.email,
-      company: client.company,
-      disc_type: client.disc_type,
-      disc_scores: client.disc_scores,
-    }));
+    const clientsToInsert = demoClients.map((client, index) => {
+      // Ensure globally unique demo emails by namespacing with user id
+      const [localPart, domain] = client.email.split("@");
+      const uniqueEmail = `${localPart}+demo-${user.id}-${index}@${domain}`;
+
+      return {
+        user_id: user.id,
+        name: client.name,
+        email: uniqueEmail,
+        company: client.company,
+        disc_type: client.disc_type,
+        disc_scores: client.disc_scores,
+      };
+    });
 
     const { data: insertedClients, error: clientError } = await supabase
       .from('clients')
@@ -269,15 +274,19 @@ Deno.serve(async (req) => {
 
     console.log(`Successfully inserted ${insertedClients?.length} clients`);
 
-    // Insert all demo staff
-    const staffToInsert = demoStaff.map(staff => ({
-      user_id: user.id,
-      name: staff.name,
-      email: staff.email,
-      role: staff.role,
-      disc_type: staff.disc_type,
-      disc_scores: staff.disc_scores,
-    }));
+    const staffToInsert = demoStaff.map((staff, index) => {
+      const [localPart, domain] = staff.email.split("@");
+      const uniqueEmail = `${localPart}+demo-${user.id}-${index}@${domain}`;
+
+      return {
+        user_id: user.id,
+        name: staff.name,
+        email: uniqueEmail,
+        role: staff.role,
+        disc_type: staff.disc_type,
+        disc_scores: staff.disc_scores,
+      };
+    });
 
     const { data: insertedStaff, error: staffError } = await supabase
       .from('staff')
