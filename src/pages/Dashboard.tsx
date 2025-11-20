@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,9 +38,18 @@ const clientSchema = z.object({
     .or(z.literal("")),
 });
 
-const Index = () => {
+const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [clientForm, setClientForm] = useState({ name: "", email: "", company: "" });
@@ -49,12 +60,18 @@ const Index = () => {
 
   const createClient = useMutation({
     mutationFn: async (client: z.infer<typeof clientSchema>) => {
+      // Check client limit
+      if (clientCount >= clientLimit) {
+        throw new Error(`You've reached your limit of ${clientLimit} clients. Upgrade to add more.`);
+      }
+
       const { data, error } = await supabase
         .from("clients")
         .insert({
           name: client.name,
           email: client.email,
           company: client.company || null,
+          user_id: user?.id,
         })
         .select()
         .single();
@@ -70,6 +87,7 @@ const Index = () => {
       setCurrentClientId(data.id);
       setShowAssessment(true);
       setClientForm({ name: "", email: "", company: "" });
+      refreshSubscription();
     },
     onError: (error: any) => {
       toast({
@@ -212,6 +230,10 @@ const Index = () => {
     }
   };
 
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -220,10 +242,13 @@ const Index = () => {
             <div>
               <h1 className="text-3xl font-bold text-foreground">ClientKey</h1>
               <p className="text-sm text-muted-foreground">
-                Client Profiling & Communication Intelligence
+                {subscription?.pricing_tier === 'free' ? 'Free Tier' : subscription?.pricing_tier === 'early_bird' ? 'Early Bird' : 'Regular'} - {clientCount}/{clientLimit} clients
               </p>
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={signOut}>
+                Sign Out
+              </Button>
               <Target className="h-8 w-8 text-primary" />
             </div>
           </div>
@@ -344,4 +369,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Dashboard;

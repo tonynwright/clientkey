@@ -59,6 +59,7 @@ export type Database = {
           id: string
           name: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           company?: string | null
@@ -69,6 +70,7 @@ export type Database = {
           id?: string
           name: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           company?: string | null
@@ -79,6 +81,7 @@ export type Database = {
           id?: string
           name?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -245,6 +248,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_count_for_user: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_client_limit_for_user: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       increment_early_bird_counter: { Args: never; Returns: number }
     }
     Enums: {

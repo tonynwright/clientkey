@@ -28,9 +28,9 @@ export default function Index() {
           <Button 
             size="lg" 
             className="text-lg px-8 py-6"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/auth')}
           >
-            Start Free Trial
+            Start Free - 3 Clients
           </Button>
           <Button 
             size="lg" 
