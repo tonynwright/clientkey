@@ -19,7 +19,8 @@ import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings } from "lucide-react";
+import { AdminSetup } from "@/components/AdminSetup";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -44,7 +45,7 @@ const clientSchema = z.object({
 const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut } = useAuth();
+  const { user, clientLimit, clientCount, subscription, refreshSubscription, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -264,9 +265,20 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">ClientKey</h1>
+              <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+                ClientKey
+                {isAdmin && (
+                  <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-primary text-primary-foreground">
+                    <Shield className="h-3 w-3" />
+                    Admin
+                  </span>
+                )}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                {subscription?.pricing_tier === 'free' ? 'Free Tier' : subscription?.pricing_tier === 'early_bird' ? 'Early Bird' : 'Regular'} - {clientCount}/{clientLimit} clients
+                {isAdmin 
+                  ? `Admin Account - Unlimited clients (${clientCount})` 
+                  : `${subscription?.pricing_tier === 'free' ? 'Free Tier' : subscription?.pricing_tier === 'early_bird' ? 'Early Bird' : 'Regular'} - ${clientCount}/${clientLimit} clients`
+                }
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -280,7 +292,7 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {subscription?.pricing_tier === 'free' && (
+        {subscription?.pricing_tier === 'free' && !isAdmin && (
           <Alert className="mb-6 border-primary">
             <Zap className="h-4 w-4 text-primary" />
             <AlertDescription className="flex items-center justify-between">
@@ -378,6 +390,7 @@ const Dashboard = () => {
 
           <TabsContent value="settings">
             <div className="max-w-3xl mx-auto space-y-6">
+              {!isAdmin && <AdminSetup />}
               <StripeWebhookSetup />
             </div>
           </TabsContent>

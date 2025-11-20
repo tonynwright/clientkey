@@ -12,6 +12,7 @@ interface AuthContextType {
   subscription: any;
   clientLimit: number;
   clientCount: number;
+  isAdmin: boolean;
   refreshSubscription: () => Promise<void>;
 }
 
@@ -23,9 +24,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [subscription, setSubscription] = useState<any>(null);
   const [clientLimit, setClientLimit] = useState(3);
   const [clientCount, setClientCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   const fetchSubscription = async (userId: string) => {
+    // Check if user is admin
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    const adminStatus = !!roleData;
+    setIsAdmin(adminStatus);
+
     const { data } = await supabase
       .from("subscriptions")
       .select("*")
@@ -37,8 +50,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setSubscription(data);
 
-    // Get client limit
-    const limit = data?.pricing_tier === "free" ? 3 : 300;
+    // Get client limit (admins get unlimited)
+    const limit = adminStatus ? 999999 : (data?.pricing_tier === "free" ? 3 : 300);
     setClientLimit(limit);
 
     // Get current client count
@@ -129,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         subscription,
         clientLimit,
         clientCount,
+        isAdmin,
         refreshSubscription,
       }}
     >
