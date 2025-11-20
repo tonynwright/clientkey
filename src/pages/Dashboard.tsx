@@ -28,6 +28,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
+import { SeedingProgressDialog } from "@/components/SeedingProgressDialog";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -138,6 +139,7 @@ const Dashboard = () => {
   const [showPlaybook, setShowPlaybook] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [seedingProgress, setSeedingProgress] = useState(false);
 
   // Check if user is new (no clients) and hasn't seen onboarding
   useEffect(() => {
@@ -167,10 +169,7 @@ const Dashboard = () => {
 
   const handleOnboardingTryDemo = async () => {
     try {
-      toast({
-        title: "Creating demo data...",
-        description: "Setting up 25 clients and 25 staff members with diverse DISC profiles.",
-      });
+      setSeedingProgress(true);
 
       const { data, error } = await supabase.functions.invoke('seed-demo-data');
 
@@ -192,6 +191,8 @@ const Dashboard = () => {
         description: "Failed to create demo data. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setSeedingProgress(false);
     }
   };
 
@@ -834,6 +835,8 @@ const Dashboard = () => {
         onTryDemo={handleOnboardingTryDemo}
         onSkip={handleOnboardingSkip}
       />
+
+      <SeedingProgressDialog open={seedingProgress} />
     </div>
   );
 };
