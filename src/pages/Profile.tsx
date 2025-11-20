@@ -23,25 +23,8 @@ export default function Profile() {
     }
   }, [user, navigate]);
 
-  const handleManageSubscription = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) throw error;
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to open customer portal",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleManageSubscription = () => {
+    window.open('https://billing.stripe.com/p/login/28EeVdg045s40cf70CbV600', '_blank');
   };
 
   const handleUpgrade = async () => {
@@ -186,7 +169,6 @@ export default function Profile() {
                   <Button 
                     variant="outline" 
                     onClick={handleManageSubscription}
-                    disabled={loading}
                   >
                     <CreditCard className="h-4 w-4 mr-2" />
                     Manage Subscription
