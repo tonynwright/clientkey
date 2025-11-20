@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Loader2, Mail, Palette, Code, Eye } from "lucide-react";
+import { Loader2, Mail, Palette, Code, Eye, Send } from "lucide-react";
 
 interface EmailTemplate {
   id: string;
@@ -24,9 +24,10 @@ interface EmailTemplate {
 export function EmailTemplates() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [invitationTemplate, setInvitationTemplate] = useState<EmailTemplate | null>(null);
   const [reminderTemplate, setReminderTemplate] = useState<EmailTemplate | null>(null);
-  const { isDemoAccount } = useAuth();
+  const { isDemoAccount, user } = useAuth();
 
   useEffect(() => {
     fetchTemplates();
@@ -81,6 +82,33 @@ export function EmailTemplates() {
     }
   };
 
+  const handleSendTestEmail = async (template: EmailTemplate) => {
+    if (!user?.email) {
+      toast.error("Unable to determine your email address");
+      return;
+    }
+
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-test-email", {
+        body: {
+          recipientEmail: user.email,
+          subject: template.subject,
+          content: template.content,
+          primaryColor: template.primary_color,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Test email sent to ${user.email}`);
+    } catch (error: any) {
+      toast.error("Failed to send test email: " + error.message);
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   if (loading) {
     return (
       <Card>
@@ -115,7 +143,9 @@ export function EmailTemplates() {
                 template={invitationTemplate}
                 onUpdate={setInvitationTemplate}
                 onSave={handleSaveTemplate}
+                onSendTest={handleSendTestEmail}
                 saving={saving}
+                sendingTest={sendingTest}
               />
             )}
           </TabsContent>
@@ -126,7 +156,9 @@ export function EmailTemplates() {
                 template={reminderTemplate}
                 onUpdate={setReminderTemplate}
                 onSave={handleSaveTemplate}
+                onSendTest={handleSendTestEmail}
                 saving={saving}
+                sendingTest={sendingTest}
               />
             )}
           </TabsContent>
@@ -140,10 +172,12 @@ interface TemplateEditorProps {
   template: EmailTemplate;
   onUpdate: (template: EmailTemplate) => void;
   onSave: (template: EmailTemplate) => void;
+  onSendTest: (template: EmailTemplate) => void;
   saving: boolean;
+  sendingTest: boolean;
 }
 
-function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorProps) {
+function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendingTest }: TemplateEditorProps) {
   const [showCode, setShowCode] = useState(false);
   
   const handleChange = (field: keyof EmailTemplate, value: string) => {
@@ -263,8 +297,17 @@ function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorPr
           )}
         </div>
 
-        <div className="flex justify-end">
-          <Button onClick={() => onSave(template)} disabled={saving}>
+        <div className="flex justify-end gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => onSendTest(template)} 
+            disabled={sendingTest || saving}
+          >
+            {sendingTest && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {!sendingTest && <Send className="mr-2 h-4 w-4" />}
+            Send Test Email
+          </Button>
+          <Button onClick={() => onSave(template)} disabled={saving || sendingTest}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Template
           </Button>
