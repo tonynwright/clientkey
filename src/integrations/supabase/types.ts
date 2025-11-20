@@ -174,12 +174,78 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_counter: {
+        Row: {
+          early_bird_count: number
+          early_bird_limit: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          early_bird_count?: number
+          early_bird_limit?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          early_bird_count?: number
+          early_bird_limit?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          monthly_price: number
+          pricing_tier: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          monthly_price: number
+          pricing_tier: string
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          monthly_price?: number
+          pricing_tier?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_early_bird_counter: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
