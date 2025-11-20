@@ -152,6 +152,7 @@ export type Database = {
           subject: string
           template_type: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           company_logo_url?: string | null
@@ -163,6 +164,7 @@ export type Database = {
           subject: string
           template_type: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           company_logo_url?: string | null
@@ -174,6 +176,7 @@ export type Database = {
           subject?: string
           template_type?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
