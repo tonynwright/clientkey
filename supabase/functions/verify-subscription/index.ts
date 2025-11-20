@@ -7,6 +7,11 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const logStep = (step: string, details?: any) => {
+  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
+  console.log(`[VERIFY-SUBSCRIPTION] ${step}${detailsStr}`);
+};
+
 const toIso = (unix: number | null | undefined) => {
   if (!unix || typeof unix !== "number") return null;
   const date = new Date(unix * 1000);
@@ -19,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Verifying subscription");
+    logStep("Function started");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -35,16 +40,17 @@ serve(async (req) => {
       throw new Error("User not authenticated");
     }
 
-    console.log(`Verifying for user: ${user.id}`);
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
     });
 
     // Find customer
+    logStep("Fetching Stripe customer");
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) {
-      console.log("No customer found");
+      logStep("No customer found in Stripe");
       return new Response(
         JSON.stringify({ subscription: null }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -52,9 +58,10 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
-    console.log(`Found customer: ${customerId}`);
+    logStep("Found customer", { customerId });
 
     // Get active subscriptions
+    logStep("Fetching active subscriptions");
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -62,7 +69,7 @@ serve(async (req) => {
     });
 
     if (subscriptions.data.length === 0) {
-      console.log("No active subscription found");
+      logStep("No active subscription found");
       return new Response(
         JSON.stringify({ subscription: null }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
@@ -72,69 +79,108 @@ serve(async (req) => {
     const subscription = subscriptions.data[0];
     const priceId = subscription.items.data[0].price.id;
     
+    logStep("Raw subscription data from Stripe", {
+      subscriptionId: subscription.id,
+      priceId,
+      status: subscription.status,
+      current_period_start: subscription.current_period_start,
+      current_period_end: subscription.current_period_end,
+      current_period_start_type: typeof subscription.current_period_start,
+      current_period_end_type: typeof subscription.current_period_end,
+    });
+    
     // Determine tier based on price
     let tier = "regular";
     if (priceId === "price_1SVPruDdXbYbPM4zxhtwVLHX") {
       tier = "early_bird";
     }
 
-    console.log(`Active subscription found: ${subscription.id}, tier: ${tier}`);
+    logStep("Determined subscription tier", { tier, priceId });
 
     // Update or create subscription in database
+    logStep("Checking for existing subscription in database");
     const { data: existingSub } = await supabaseClient
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
 
+    logStep("Existing subscription check result", { 
+      exists: !!existingSub,
+      existingId: existingSub?.id,
+      existingTier: existingSub?.pricing_tier,
+    });
+
+    const subscriptionData = {
+      stripe_customer_id: customerId,
+      stripe_subscription_id: subscription.id,
+      pricing_tier: tier,
+      monthly_price: tier === "early_bird" ? 1900 : 4900,
+      status: subscription.status,
+      current_period_start: toIso(subscription.current_period_start as any),
+      current_period_end: toIso(subscription.current_period_end as any),
+    };
+
+    logStep("Prepared subscription data for database", subscriptionData);
+
     if (existingSub) {
-      await supabaseClient
+      logStep("Updating existing subscription");
+      const { error: updateError } = await supabaseClient
         .from("subscriptions")
-        .update({
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscription.id,
-          pricing_tier: tier,
-          monthly_price: tier === "early_bird" ? 1900 : 4900,
-          status: subscription.status,
-          current_period_start: toIso(subscription.current_period_start as any),
-          current_period_end: toIso(subscription.current_period_end as any),
-        })
+        .update(subscriptionData)
         .eq("user_id", user.id);
+
+      if (updateError) {
+        logStep("ERROR updating subscription", { error: updateError });
+        throw updateError;
+      }
+      logStep("Subscription updated successfully");
     } else {
-      await supabaseClient
+      logStep("Creating new subscription");
+      const { error: insertError } = await supabaseClient
         .from("subscriptions")
         .insert({
           user_id: user.id,
-          stripe_customer_id: customerId,
-          stripe_subscription_id: subscription.id,
-          pricing_tier: tier,
-          monthly_price: tier === "early_bird" ? 1900 : 4900,
-          status: subscription.status,
-          current_period_start: toIso(subscription.current_period_start as any),
-          current_period_end: toIso(subscription.current_period_end as any),
+          ...subscriptionData,
         });
+
+      if (insertError) {
+        logStep("ERROR inserting subscription", { error: insertError });
+        throw insertError;
+      }
+      logStep("Subscription created successfully");
 
       // Increment early bird counter if applicable
       if (tier === "early_bird") {
+        logStep("Incrementing early bird counter");
         await supabaseClient.rpc("increment_early_bird_counter");
       }
     }
 
-    console.log("Subscription updated successfully");
+    const responseData = { 
+      subscription: {
+        tier,
+        status: subscription.status,
+        current_period_end: toIso(subscription.current_period_end as any),
+      }
+    };
+
+    logStep("Sending success response", responseData);
 
     return new Response(
-      JSON.stringify({ 
-        subscription: {
-          tier,
-          status: subscription.status,
-          current_period_end: toIso(subscription.current_period_end as any),
-        }
-      }),
+      JSON.stringify(responseData),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
-    console.error("Verification error:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
+    logStep("ERROR in verify-subscription", { 
+      message: errorMessage,
+      stack: errorStack,
+      errorType: error?.constructor?.name,
+    });
+    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
