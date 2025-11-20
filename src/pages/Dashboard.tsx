@@ -436,43 +436,20 @@ const Dashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         {user?.email === 'demo@clientkey.com' && (
-          <Alert className="mb-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <AlertDescription className="flex items-center justify-between gap-4">
-              <div>
-                <div className="font-semibold text-foreground mb-1">You're exploring the demo account</div>
-                <p className="text-sm text-muted-foreground">
-                  This is a shared environment. Sign up for your own account to save your data and unlock all features.
-                </p>
-              </div>
+          <Alert className="mb-6 border-muted">
+            <Sparkles className="h-4 w-4" />
+            <AlertDescription className="text-sm text-muted-foreground">
+              Demo mode - Changes won't be saved. 
               <Button 
-                variant="default" 
+                variant="link" 
                 size="sm"
                 onClick={() => {
                   signOut();
                   navigate('/auth');
                 }}
-                className="shrink-0"
+                className="px-2 h-auto"
               >
-                Sign Up Now
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {subscription?.pricing_tier === 'free' && !isAdmin && user?.email !== 'demo@clientkey.com' && (
-          <Alert className="mb-6 border-primary">
-            <Zap className="h-4 w-4 text-primary" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>
-                You're on the free plan. <strong>Upgrade to add up to 300 clients!</strong>
-              </span>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => setShowUpgradeDialog(true)}
-              >
-                Upgrade Now
+                Sign up for your own account
               </Button>
             </AlertDescription>
           </Alert>
