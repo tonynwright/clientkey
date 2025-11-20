@@ -5,32 +5,36 @@ import { Check, Users, Target, TrendingUp, MessageSquare, Mail, Brain, Clock, Sh
 import { useNavigate } from "react-router-dom";
 import { DISCBackground } from "@/components/DISCBackground";
 import { DISCShape } from "@/components/DISCShape";
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 export default function Index() {
   const navigate = useNavigate();
+  const heroSection = useScrollAnimation({ threshold: 0.2 });
+  const problemSection = useScrollAnimation({ threshold: 0.3 });
+  const stepsSection = useScrollAnimation({ threshold: 0.2 });
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
       <DISCBackground />
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
-        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 animate-fade-down">
           🔥 Limited Time Offer - First 30 Signups Only
         </Badge>
         
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight animate-fade-up stagger-1">
           What Would You Pay to<br />
           <span className="text-primary">Never Lose a Client?</span>
         </h1>
         
-        <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+        <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-up stagger-2">
           ClientKey helps agencies understand their clients' personality types and communication styles—so you can deliver exactly what they need, every time.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-up stagger-3">
           <Button 
             size="lg" 
-            className="text-lg px-8 py-6"
+            className="text-lg px-8 py-6 hover:scale-105 transition-transform"
             onClick={() => navigate('/auth')}
           >
             Start Free - 3 Clients
@@ -38,14 +42,14 @@ export default function Index() {
           <Button 
             size="lg" 
             variant="outline"
-            className="text-lg px-8 py-6"
+            className="text-lg px-8 py-6 hover:scale-105 transition-transform"
             onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
           >
             View Pricing
           </Button>
         </div>
 
-        <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground animate-fade-up stagger-4">
           <div className="flex items-center gap-2">
             <Check className="h-5 w-5 text-primary" />
             No credit card required
@@ -62,8 +66,8 @@ export default function Index() {
       </section>
 
       {/* Problem Statement */}
-      <section className="container mx-auto px-4 py-16">
-        <Card className="border-2 border-destructive/20 bg-destructive/5">
+      <section ref={problemSection.ref} className="container mx-auto px-4 py-16">
+        <Card className={`border-2 border-destructive/20 bg-destructive/5 ${problemSection.isInView ? 'animate-scale-up' : 'opacity-0'}`}>
           <CardContent className="p-8 md:p-12">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
               The Silent Client Killer
@@ -76,18 +80,18 @@ export default function Index() {
       </section>
 
       {/* How It Works */}
-      <section className="container mx-auto px-4 py-16">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+      <section ref={stepsSection.ref} className="container mx-auto px-4 py-16">
+        <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 ${stepsSection.isInView ? 'animate-fade-up' : 'opacity-0'}`}>
           How ClientKey Works
         </h2>
         
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+          <Card className={`border-border relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${stepsSection.isInView ? 'animate-fade-up stagger-1' : 'opacity-0'}`}>
             <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <DISCShape type="I" size="lg" />
             </div>
             <CardContent className="p-6 text-center relative z-10">
-              <div className="w-16 h-16 bg-disc-i/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-disc-i/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Mail className="h-8 w-8 text-disc-i" />
               </div>
               <h3 className="text-xl font-semibold mb-3">1. Send Assessment</h3>
@@ -97,12 +101,12 @@ export default function Index() {
             </CardContent>
           </Card>
 
-          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+          <Card className={`border-border relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${stepsSection.isInView ? 'animate-fade-up stagger-2' : 'opacity-0'}`}>
             <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <DISCShape type="C" size="lg" />
             </div>
             <CardContent className="p-6 text-center relative z-10">
-              <div className="w-16 h-16 bg-disc-c/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-disc-c/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Brain className="h-8 w-8 text-disc-c" />
               </div>
               <h3 className="text-xl font-semibold mb-3">2. Get Insights</h3>
@@ -112,12 +116,12 @@ export default function Index() {
             </CardContent>
           </Card>
 
-          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+          <Card className={`border-border relative overflow-hidden group hover:shadow-lg transition-all duration-300 ${stepsSection.isInView ? 'animate-fade-up stagger-3' : 'opacity-0'}`}>
             <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
               <DISCShape type="S" size="lg" />
             </div>
             <CardContent className="p-6 text-center relative z-10">
-              <div className="w-16 h-16 bg-disc-s/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-disc-s/10 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <MessageSquare className="h-8 w-8 text-disc-s" />
               </div>
               <h3 className="text-xl font-semibold mb-3">3. Communicate Better</h3>
