@@ -15,6 +15,22 @@ interface InviteRequest {
   clientEmail: string;
 }
 
+// Validation schemas
+const inviteRequestSchema = {
+  clientId: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+  clientName: (name: string) => name.length > 0 && name.length <= 100,
+  clientEmail: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+};
+
+const sanitizeHtml = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -22,6 +38,31 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { clientId, clientName, clientEmail }: InviteRequest = await req.json();
+
+    // Validate input data
+    if (!inviteRequestSchema.clientId.test(clientId)) {
+      console.error("Invalid client ID format:", clientId);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid client ID format" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!inviteRequestSchema.clientName(clientName)) {
+      console.error("Invalid client name:", clientName);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid client name" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    if (!inviteRequestSchema.clientEmail.test(clientEmail)) {
+      console.error("Invalid email address:", clientEmail);
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid email address" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     console.log("Sending assessment invite to:", clientEmail);
 
@@ -47,9 +88,12 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("Failed to load email template");
     }
 
+    // Sanitize client name before inserting into HTML
+    const sanitizedClientName = sanitizeHtml(clientName);
+
     // Replace template variables
     let emailContent = template.content
-      .replace(/\{\{CLIENT_NAME\}\}/g, clientName)
+      .replace(/\{\{CLIENT_NAME\}\}/g, sanitizedClientName)
       .replace(/\{\{ASSESSMENT_LINK\}\}/g, trackingClickUrl)
       .replace(/\{\{PRIMARY_COLOR\}\}/g, template.primary_color || '#4F46E5');
 

@@ -6,6 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DISCAssessment } from "@/components/DISCAssessment";
 import { CheckCircle2 } from "lucide-react";
+import { z } from "zod";
+
+// Validation schema for assessment results
+const assessmentResultSchema = z.object({
+  responses: z.array(z.string()).length(24, "Assessment must have exactly 24 responses"),
+  scores: z.object({
+    D: z.number().min(0).max(48),
+    I: z.number().min(0).max(48),
+    S: z.number().min(0).max(48),
+    C: z.number().min(0).max(48),
+  }),
+  dominantType: z.enum(['D', 'I', 'S', 'C'], {
+    errorMap: () => ({ message: "Dominant type must be D, I, S, or C" })
+  }),
+});
 
 export default function PublicAssessment() {
   const { clientId } = useParams<{ clientId: string }>();
@@ -59,12 +74,27 @@ export default function PublicAssessment() {
     if (!clientId) return;
 
     try {
+      // Validate assessment results
+      const validationResult = assessmentResultSchema.safeParse(results);
+      
+      if (!validationResult.success) {
+        console.error("Assessment validation failed:", validationResult.error);
+        toast({
+          title: "Invalid Assessment Data",
+          description: "Please complete all questions and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const validatedData = validationResult.data;
+
       // Update client with DISC results
       const { error: updateError } = await supabase
         .from("clients")
         .update({
-          disc_type: results.dominantType,
-          disc_scores: results.scores,
+          disc_type: validatedData.dominantType,
+          disc_scores: validatedData.scores,
         })
         .eq("id", clientId);
 
@@ -75,9 +105,9 @@ export default function PublicAssessment() {
         .from("assessments")
         .insert({
           client_id: clientId,
-          responses: results.responses,
-          scores: results.scores,
-          dominant_type: results.dominantType,
+          responses: validatedData.responses,
+          scores: validatedData.scores,
+          dominant_type: validatedData.dominantType,
         });
 
       if (assessmentError) throw assessmentError;
