@@ -213,9 +213,9 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border border-border bg-card p-6">
+        <Card className="border border-border bg-card p-6 hover:shadow-lg transition-all duration-300 animate-fade-up stagger-1">
           <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-3">
+            <div className="rounded-lg bg-primary/10 p-3 transition-transform hover:scale-110">
               <Users className="h-6 w-6 text-primary" />
             </div>
             <div>
@@ -225,9 +225,9 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
           </div>
         </Card>
 
-        <Card className="border border-border bg-card p-6">
+        <Card className="border border-border bg-card p-6 hover:shadow-lg transition-all duration-300 animate-fade-up stagger-2">
           <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-green-500/10 p-3">
+            <div className="rounded-lg bg-green-500/10 p-3 transition-transform hover:scale-110">
               <Target className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
             <div>
@@ -237,9 +237,9 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
           </div>
         </Card>
 
-        <Card className="border border-border bg-card p-6">
+        <Card className="border border-border bg-card p-6 hover:shadow-lg transition-all duration-300 animate-fade-up stagger-3">
           <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-blue-500/10 p-3">
+            <div className="rounded-lg bg-blue-500/10 p-3 transition-transform hover:scale-110">
               <TrendingUp className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
