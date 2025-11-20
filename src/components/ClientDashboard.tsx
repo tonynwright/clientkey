@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award, Download, Mail } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -15,6 +15,12 @@ interface Client {
   company: string | null;
   disc_type: string | null;
   disc_scores: any;
+  created_at: string;
+}
+
+interface EmailTracking {
+  client_id: string;
+  event_type: "sent" | "opened" | "clicked" | "completed";
   created_at: string;
 }
 
@@ -44,6 +50,30 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
       return data as Client[];
     },
   });
+
+  const { data: trackingData } = useQuery({
+    queryKey: ["email_tracking"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_tracking")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as EmailTracking[];
+    },
+  });
+
+  const getClientTracking = (clientId: string) => {
+    if (!trackingData) return null;
+    const events = trackingData.filter((t) => t.client_id === clientId);
+    return {
+      sent: events.some((e) => e.event_type === "sent"),
+      opened: events.some((e) => e.event_type === "opened"),
+      clicked: events.some((e) => e.event_type === "clicked"),
+      completed: events.some((e) => e.event_type === "completed"),
+    };
+  };
 
   const handleSendInvite = async (client: Client) => {
     try {
@@ -226,6 +256,35 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
                   </div>
 
                   <p className="text-xs text-muted-foreground">{client.email}</p>
+
+                  {(() => {
+                    const tracking = getClientTracking(client.id);
+                    if (tracking && tracking.sent && !client.disc_type) {
+                      return (
+                        <div className="flex gap-2 text-xs">
+                          {tracking.opened && (
+                            <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400">
+                              <MailOpen className="h-3 w-3" />
+                              Opened
+                            </span>
+                          )}
+                          {tracking.clicked && (
+                            <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400">
+                              <MousePointerClick className="h-3 w-3" />
+                              Clicked
+                            </span>
+                          )}
+                          {!tracking.opened && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <Mail className="h-3 w-3" />
+                              Sent
+                            </span>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {client.disc_scores && (
                     <div className="grid grid-cols-4 gap-2 pt-2 border-t border-border">

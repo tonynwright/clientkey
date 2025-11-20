@@ -82,6 +82,35 @@ export type Database = {
         }
         Relationships: []
       }
+      email_tracking: {
+        Row: {
+          client_id: string
+          created_at: string
+          event_type: string
+          id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_tracking_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
