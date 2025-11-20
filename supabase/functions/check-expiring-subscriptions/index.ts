@@ -13,6 +13,26 @@ serve(async (req) => {
   }
 
   try {
+    // SECURITY: Validate CRON_SECRET to prevent unauthorized access
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const providedSecret = req.headers.get("x-cron-secret");
+
+    if (!cronSecret) {
+      console.error("CRON_SECRET environment variable not configured");
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    if (cronSecret !== providedSecret) {
+      console.error("Unauthorized access attempt - invalid or missing CRON_SECRET");
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
     console.log("Starting expiring subscriptions check");
 
     const supabaseClient = createClient(
