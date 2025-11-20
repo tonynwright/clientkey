@@ -248,7 +248,12 @@ Deno.serve(async (req) => {
     const insightPromises = insertedClients?.map(async (client) => {
       try {
         const { error: insightError } = await supabase.functions.invoke('generate-disc-insights', {
-          body: { clientId: client.id }
+          body: { 
+            clientId: client.id,
+            discType: client.disc_type,
+            scores: client.disc_scores,
+            clientName: client.name
+          }
         });
         
         if (insightError) {
