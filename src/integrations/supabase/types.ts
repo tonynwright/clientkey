@@ -88,18 +88,21 @@ export type Database = {
           created_at: string
           event_type: string
           id: string
+          metadata: Json | null
         }
         Insert: {
           client_id: string
           created_at?: string
           event_type: string
           id?: string
+          metadata?: Json | null
         }
         Update: {
           client_id?: string
           created_at?: string
           event_type?: string
           id?: string
+          metadata?: Json | null
         }
         Relationships: [
           {
@@ -110,6 +113,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reminder_settings: {
+        Row: {
+          created_at: string
+          id: string
+          max_reminders: number
+          reminder_delay_days: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_reminders?: number
+          reminder_delay_days?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_reminders?: number
+          reminder_delay_days?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -22,6 +22,19 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Get reminder settings
+    const { data: settings, error: settingsError } = await supabase
+      .from("reminder_settings")
+      .select("*")
+      .single();
+
+    if (settingsError) throw settingsError;
+
+    const reminderDelayDays = settings.reminder_delay_days;
+    const maxReminders = settings.max_reminders;
+
+    console.log(`Using settings: delay=${reminderDelayDays} days, max=${maxReminders} reminders`);
+
     // Get clients who have not completed assessment
     const { data: clients, error: clientsError } = await supabase
       .from("clients")
@@ -48,8 +61,8 @@ const handler = async (req: Request): Promise<Response> => {
     if (trackingError) throw trackingError;
 
     // Filter clients who need reminders
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const delayDate = new Date();
+    delayDate.setDate(delayDate.getDate() - reminderDelayDays);
 
     const clientsNeedingReminders = clients.filter((client) => {
       const clientTracking = trackingData?.filter((t) => t.client_id === client.id) || [];
@@ -66,9 +79,33 @@ const handler = async (req: Request): Promise<Response> => {
       const completedEvent = clientTracking.find((t) => t.event_type === "completed");
       if (completedEvent) return false;
 
-      // Check if opened more than 3 days ago
-      const openedDate = new Date(openedEvent.created_at);
-      if (openedDate > threeDaysAgo) return false;
+      // Count how many reminders have been sent (sent events after the initial one)
+      const remindersSent = clientTracking.filter((t) => {
+        if (t.event_type !== "sent") return false;
+        const metadata = t.metadata as any;
+        return metadata?.is_reminder === true;
+      }).length;
+
+      // Check if max reminders reached
+      if (remindersSent >= maxReminders) {
+        console.log(`Client ${client.id} has reached max reminders (${remindersSent}/${maxReminders})`);
+        return false;
+      }
+
+      // Check if enough time has passed since last action
+      const lastActionDate = new Date(
+        Math.max(
+          new Date(openedEvent.created_at).getTime(),
+          ...clientTracking
+            .filter(t => t.event_type === "sent" && (t.metadata as any)?.is_reminder === true)
+            .map(t => new Date(t.created_at).getTime())
+        )
+      );
+
+      if (lastActionDate > delayDate) {
+        console.log(`Client ${client.id} not ready yet. Last action: ${lastActionDate}, needs to be before: ${delayDate}`);
+        return false;
+      }
 
       // Check if reminder already sent today
       const today = new Date();
@@ -76,7 +113,8 @@ const handler = async (req: Request): Promise<Response> => {
       const reminderSentToday = clientTracking.some((t) => {
         const eventDate = new Date(t.created_at);
         eventDate.setHours(0, 0, 0, 0);
-        return t.event_type === "sent" && eventDate >= today;
+        const metadata = t.metadata as any;
+        return t.event_type === "sent" && metadata?.is_reminder === true && eventDate >= today;
       });
 
       return !reminderSentToday;
@@ -130,10 +168,20 @@ const handler = async (req: Request): Promise<Response> => {
           `,
         });
 
-        // Track reminder sent
+        // Track reminder sent with metadata
+        const clientTracking = trackingData?.filter((t) => t.client_id === client.id) || [];
+        const reminderCount = clientTracking.filter((t) => {
+          const metadata = t.metadata as any;
+          return t.event_type === "sent" && metadata?.is_reminder === true;
+        }).length;
+
         await supabase.from("email_tracking").insert({
           client_id: client.id,
           event_type: "sent",
+          metadata: { 
+            is_reminder: true,
+            reminder_number: reminderCount + 1
+          },
         });
 
         sentCount++;
