@@ -82,6 +82,12 @@ export default function PublicAssessment() {
 
       if (assessmentError) throw assessmentError;
 
+      // Track completion
+      await supabase.from("email_tracking").insert({
+        client_id: clientId,
+        event_type: "completed",
+      });
+
       setIsComplete(true);
       toast({
         title: "Assessment Complete!",
