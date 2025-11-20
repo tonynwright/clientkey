@@ -28,7 +28,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp } from "lucide-react";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -466,6 +466,24 @@ const Dashboard = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        {subscription?.status === 'incomplete' || subscription?.status === 'past_due' ? (
+          <Alert variant="destructive" className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Payment Issue:</strong> Your subscription payment {subscription.status === 'incomplete' ? 'is incomplete' : 'is past due'}. 
+              Please update your payment method to continue using premium features.
+              <Button 
+                variant="link" 
+                size="sm"
+                onClick={() => navigate('/profile')}
+                className="px-2 h-auto text-destructive-foreground hover:text-destructive-foreground/80"
+              >
+                Update payment method
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full max-w-6xl mx-auto grid-cols-7 mb-8">
