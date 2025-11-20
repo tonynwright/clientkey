@@ -11,18 +11,15 @@ import NotFound from "./pages/NotFound";
 import PublicAssessment from "./pages/PublicAssessment";
 import Profile from "./pages/Profile";
 import Pricing from "./pages/Pricing";
-
 const queryClient = new QueryClient();
-
 const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
+  return <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
+            <Routes className="bg-red-400">
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -34,8 +31,6 @@ const App = () => {
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
-  );
+    </QueryClientProvider>;
 };
-
 export default App;
