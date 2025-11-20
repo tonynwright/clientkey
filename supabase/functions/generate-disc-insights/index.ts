@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
@@ -14,8 +15,10 @@ interface InsightRequest {
     S: number;
     C: number;
   };
+  clientId: string;
   clientName?: string;
   context?: string;
+  saveToDatabase?: boolean;
 }
 
 serve(async (req) => {
@@ -25,13 +28,21 @@ serve(async (req) => {
   }
 
   try {
-    const { discType, scores, clientName, context }: InsightRequest = await req.json();
+    const { discType, scores, clientId, clientName, context, saveToDatabase = true }: InsightRequest = await req.json();
 
-    console.log('Generating insights for:', { discType, scores, clientName });
+    console.log('Generating insights for:', { discType, scores, clientId, clientName });
 
-    if (!discType || !scores) {
-      throw new Error('DISC type and scores are required');
+    if (!discType || !scores || !clientId) {
+      throw new Error('DISC type, scores, and client ID are required');
     }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const authHeader = req.headers.get('Authorization')!;
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -114,12 +125,36 @@ Keep the insights concise, practical, and actionable for agency professionals.`;
 
     console.log('Successfully generated insights');
 
+    // Save insights to database if requested
+    let savedInsight = null;
+    if (saveToDatabase) {
+      const { data: insertData, error: insertError } = await supabase
+        .from('disc_insights')
+        .insert({
+          client_id: clientId,
+          disc_type: discType,
+          scores,
+          insights
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('Error saving insights to database:', insertError);
+        // Don't fail the request if saving fails, just log it
+      } else {
+        savedInsight = insertData;
+        console.log('Insights saved to database:', insertData.id);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         insights,
         discType,
         scores,
-        clientName 
+        clientName,
+        savedInsight
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

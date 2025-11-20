@@ -85,6 +85,44 @@ export type Database = {
         }
         Relationships: []
       }
+      disc_insights: {
+        Row: {
+          client_id: string
+          created_at: string
+          disc_type: string
+          id: string
+          insights: string
+          scores: Json
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          disc_type: string
+          id?: string
+          insights: string
+          scores: Json
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          disc_type?: string
+          id?: string
+          insights?: string
+          scores?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disc_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_templates: {
         Row: {
           company_logo_url: string | null
