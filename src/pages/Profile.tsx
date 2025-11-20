@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw } from "lucide-react";
+import { User, CreditCard, ArrowLeft, Zap, Check, Shield, Users, Target, RefreshCw, Calendar, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Profile() {
@@ -257,6 +257,79 @@ export default function Profile() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Subscription Timeline (Paid users only) */}
+          {!isFree && !isAdmin && subscription && (
+            <Card className="glass animate-fade-up stagger-2">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Subscription Timeline
+                </CardTitle>
+                <CardDescription>Your subscription milestones</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="relative space-y-8">
+                  {/* Timeline line */}
+                  <div className="absolute left-4 top-3 bottom-3 w-0.5 bg-border" />
+                  
+                  {/* Account Created */}
+                  <div className="relative flex gap-4 items-start">
+                    <div className="relative z-10 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 pt-1">
+                      <p className="font-semibold text-sm">Account Created</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(subscription.created_at), 'PPP')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Upgraded to Paid */}
+                  {subscription.current_period_start && (
+                    <div className="relative flex gap-4 items-start">
+                      <div className="relative z-10 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Zap className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="font-semibold text-sm">Upgraded to {tierName}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(subscription.current_period_start), 'PPP')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Next Renewal or Cancellation */}
+                  {subscription.current_period_end && (
+                    <div className="relative flex gap-4 items-start">
+                      <div className={`relative z-10 h-8 w-8 rounded-full flex items-center justify-center ${
+                        subscription.cancel_at_period_end ? 'bg-destructive/10' : 'bg-primary/10'
+                      }`}>
+                        <Calendar className={`h-4 w-4 ${
+                          subscription.cancel_at_period_end ? 'text-destructive' : 'text-primary'
+                        }`} />
+                      </div>
+                      <div className="flex-1 pt-1">
+                        <p className="font-semibold text-sm">
+                          {subscription.cancel_at_period_end ? 'Subscription Ends' : 'Next Renewal'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {format(new Date(subscription.current_period_end), 'PPP')}
+                        </p>
+                        {!subscription.cancel_at_period_end && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            You'll be charged {tierPrice} on this date
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Upgrade Benefits (Free users only) */}
           {isFree && (
