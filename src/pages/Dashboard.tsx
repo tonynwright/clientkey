@@ -22,7 +22,9 @@ import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles } from "lucide-react";
+import { StaffManagement } from "@/components/StaffManagement";
+import { StaffClientMatching } from "@/components/StaffClientMatching";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -116,7 +118,7 @@ const Dashboard = () => {
     try {
       toast({
         title: "Creating demo data...",
-        description: "Setting up 25 diverse client profiles for you.",
+        description: "Setting up 25 clients and 25 staff members with diverse DISC profiles.",
       });
 
       const { data, error } = await supabase.functions.invoke('seed-demo-data');
@@ -125,12 +127,13 @@ const Dashboard = () => {
 
       toast({
         title: "Demo data created!",
-        description: data.message || "Successfully created 25 demo clients with diverse DISC profiles.",
+        description: data.message || "Successfully created demo clients and staff members.",
       });
 
       setShowOnboarding(false);
-      setActiveTab("clients");
+      setActiveTab("matching");
       queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
     } catch (error) {
       console.error("Error creating demo data:", error);
       toast({
@@ -374,7 +377,7 @@ const Dashboard = () => {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-4 mb-8">
+          <TabsList className="grid w-full max-w-5xl mx-auto grid-cols-6 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -382,6 +385,14 @@ const Dashboard = () => {
             <TabsTrigger value="add-client" className="gap-2">
               <UserPlus className="h-4 w-4" />
               Add Client
+            </TabsTrigger>
+            <TabsTrigger value="staff" className="gap-2">
+              <Users className="h-4 w-4" />
+              Staff
+            </TabsTrigger>
+            <TabsTrigger value="matching" className="gap-2">
+              <Target className="h-4 w-4" />
+              Matching
             </TabsTrigger>
             <TabsTrigger value="comparison" className="gap-2">
               <GitCompare className="h-4 w-4" />
@@ -449,6 +460,14 @@ const Dashboard = () => {
 
           <TabsContent value="comparison">
             <ClientComparison />
+          </TabsContent>
+
+          <TabsContent value="staff">
+            <StaffManagement />
+          </TabsContent>
+
+          <TabsContent value="matching">
+            <StaffClientMatching />
           </TabsContent>
 
           <TabsContent value="settings">
