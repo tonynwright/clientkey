@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string, rememberMe?: boolean) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   subscription: any;
@@ -89,8 +89,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => authSubscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const signIn = async (email: string, password: string, rememberMe: boolean = false) => {
+    const { error } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password
+    });
+    
+    if (!error && rememberMe) {
+      // Store preference for 30-day persistence
+      localStorage.setItem('rememberMe', 'true');
+    }
+    
     if (!error) {
       navigate("/dashboard");
     }
@@ -122,6 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     setSubscription(null);
+    localStorage.removeItem('rememberMe');
     navigate("/auth");
   };
 
