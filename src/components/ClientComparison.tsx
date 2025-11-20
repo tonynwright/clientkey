@@ -26,6 +26,15 @@ interface Client {
   disc_scores: any;
 }
 
+interface Staff {
+  id: string;
+  name: string;
+  email: string;
+  role: string | null;
+  disc_type: string | null;
+  disc_scores: any;
+}
+
 const DISC_COLORS = {
   D: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200 border-red-300",
   I: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200 border-yellow-300",
@@ -48,8 +57,8 @@ const COMPATIBILITY_MATRIX = {
 
 export const ClientComparison = () => {
   const { toast } = useToast();
-  const [client1Id, setClient1Id] = useState<string>("");
-  const [client2Id, setClient2Id] = useState<string>("");
+  const [staffId, setStaffId] = useState<string>("");
+  const [clientId, setClientId] = useState<string>("");
 
   const { data: clients } = useQuery({
     queryKey: ["profiled-clients"],
@@ -65,12 +74,26 @@ export const ClientComparison = () => {
     },
   });
 
-  const client1 = clients?.find((c) => c.id === client1Id);
-  const client2 = clients?.find((c) => c.id === client2Id);
+  const { data: staff } = useQuery({
+    queryKey: ["profiled-staff"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("staff")
+        .select("*")
+        .not("disc_type", "is", null)
+        .order("name");
+
+      if (error) throw error;
+      return data as Staff[];
+    },
+  });
+
+  const selectedStaff = staff?.find((s) => s.id === staffId);
+  const selectedClient = clients?.find((c) => c.id === clientId);
 
   const getCompatibility = () => {
-    if (!client1?.disc_type || !client2?.disc_type) return null;
-    const key = [client1.disc_type, client2.disc_type]
+    if (!selectedStaff?.disc_type || !selectedClient?.disc_type) return null;
+    const key = [selectedStaff.disc_type, selectedClient.disc_type]
       .sort()
       .join("") as keyof typeof COMPATIBILITY_MATRIX;
     return COMPATIBILITY_MATRIX[key];
@@ -79,10 +102,10 @@ export const ClientComparison = () => {
   const compatibility = getCompatibility();
 
   const handleExport = async () => {
-    if (!client1 || !client2 || !client1.disc_type || !client2.disc_type) {
+    if (!selectedStaff || !selectedClient || !selectedStaff.disc_type || !selectedClient.disc_type) {
       toast({
         title: "Cannot export",
-        description: "Please select two profiled clients",
+        description: "Please select a staff member and a client",
         variant: "destructive",
       });
       return;
@@ -92,18 +115,18 @@ export const ClientComparison = () => {
       const blob = await pdf(
         <ComparisonReportPDF
           client1={{
-            name: client1.name,
-            email: client1.email,
-            company: client1.company,
-            disc_type: client1.disc_type,
-            disc_scores: client1.disc_scores as Record<string, number>,
+            name: selectedStaff.name,
+            email: selectedStaff.email,
+            company: selectedStaff.role || "Staff Member",
+            disc_type: selectedStaff.disc_type,
+            disc_scores: selectedStaff.disc_scores as Record<string, number>,
           }}
           client2={{
-            name: client2.name,
-            email: client2.email,
-            company: client2.company,
-            disc_type: client2.disc_type,
-            disc_scores: client2.disc_scores as Record<string, number>,
+            name: selectedClient.name,
+            email: selectedClient.email,
+            company: selectedClient.company,
+            disc_type: selectedClient.disc_type,
+            disc_scores: selectedClient.disc_scores as Record<string, number>,
           }}
         />
       ).toBlob();
@@ -111,7 +134,7 @@ export const ClientComparison = () => {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `${client1.name.replace(/\s+/g, "_")}_vs_${client2.name.replace(
+      link.download = `${selectedStaff.name.replace(/\s+/g, "_")}_vs_${selectedClient.name.replace(
         /\s+/g,
         "_"
       )}_Compatibility_Report.pdf`;
@@ -131,92 +154,101 @@ export const ClientComparison = () => {
     }
   };
 
+  if (!staff || staff.length === 0 || !clients || clients.length === 0) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <Card className="border border-border bg-card p-8">
+          <div className="text-center text-muted-foreground">
+            <Users className="mx-auto h-12 w-12 mb-4 opacity-50" />
+            <p>You need at least 1 profiled staff member and 1 profiled client to use this feature.</p>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <Card className="border border-border bg-card p-8">
         <div className="mb-6 flex items-center gap-3">
           <Users className="h-6 w-6 text-primary" />
           <div>
-            <h2 className="text-2xl font-semibold text-foreground">DISC Compatibility Analysis</h2>
+            <h2 className="text-2xl font-semibold text-foreground">Staff-Client Compatibility Analysis</h2>
             <p className="text-sm text-muted-foreground">
-              Compare two clients to understand their collaboration dynamics
+              Compare a staff member with a client to understand their working dynamics
             </p>
           </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="client1">First Client</Label>
-            <Select value={client1Id} onValueChange={setClient1Id}>
-              <SelectTrigger id="client1">
-                <SelectValue placeholder="Select a client" />
+            <Label htmlFor="staff">Staff Member</Label>
+            <Select value={staffId} onValueChange={setStaffId}>
+              <SelectTrigger id="staff">
+                <SelectValue placeholder="Select a staff member" />
               </SelectTrigger>
               <SelectContent>
-                {clients
-                  ?.filter((c) => c.id !== client2Id)
-                  .map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name} ({client.disc_type})
-                    </SelectItem>
-                  ))}
+                {staff?.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name} ({s.disc_type})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="client2">Second Client</Label>
-            <Select value={client2Id} onValueChange={setClient2Id}>
-              <SelectTrigger id="client2">
+            <Label htmlFor="client">Client</Label>
+            <Select value={clientId} onValueChange={setClientId}>
+              <SelectTrigger id="client">
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients
-                  ?.filter((c) => c.id !== client1Id)
-                  .map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name} ({client.disc_type})
-                    </SelectItem>
-                  ))}
+                {clients?.map((client) => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name} ({client.disc_type})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {client1 && client2 && compatibility && (
+        {selectedStaff && selectedClient && compatibility && (
           <div className="mt-8 space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <Card className="border border-border bg-muted/40 p-5">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Client 1</p>
-                  <p className="text-lg font-semibold text-foreground">{client1.name}</p>
-                  <p className="text-xs text-muted-foreground">{client1.email}</p>
-                  {client1.company && (
-                    <p className="text-xs text-muted-foreground">{client1.company}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Staff Member</p>
+                  <p className="text-lg font-semibold text-foreground">{selectedStaff.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedStaff.email}</p>
+                  {selectedStaff.role && (
+                    <p className="text-xs text-muted-foreground">{selectedStaff.role}</p>
                   )}
                   <Badge
                     className={`${
-                      DISC_COLORS[client1.disc_type as keyof typeof DISC_COLORS]
+                      DISC_COLORS[selectedStaff.disc_type as keyof typeof DISC_COLORS]
                     } mt-2 border font-bold`}
                   >
-                    {client1.disc_type} Type
+                    {selectedStaff.disc_type} Type
                   </Badge>
                 </div>
               </Card>
 
               <Card className="border border-border bg-muted/40 p-5">
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Client 2</p>
-                  <p className="text-lg font-semibold text-foreground">{client2.name}</p>
-                  <p className="text-xs text-muted-foreground">{client2.email}</p>
-                  {client2.company && (
-                    <p className="text-xs text-muted-foreground">{client2.company}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Client</p>
+                  <p className="text-lg font-semibold text-foreground">{selectedClient.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedClient.email}</p>
+                  {selectedClient.company && (
+                    <p className="text-xs text-muted-foreground">{selectedClient.company}</p>
                   )}
                   <Badge
                     className={`${
-                      DISC_COLORS[client2.disc_type as keyof typeof DISC_COLORS]
+                      DISC_COLORS[selectedClient.disc_type as keyof typeof DISC_COLORS]
                     } mt-2 border font-bold`}
                   >
-                    {client2.disc_type} Type
+                    {selectedClient.disc_type} Type
                   </Badge>
                 </div>
               </Card>
@@ -238,8 +270,8 @@ export const ClientComparison = () => {
 
             <div className="grid gap-3 md:grid-cols-4">
               {["D", "I", "S", "C"].map((type) => {
-                const score1 = (client1.disc_scores as Record<string, number>)?.[type] || 0;
-                const score2 = (client2.disc_scores as Record<string, number>)?.[type] || 0;
+                const score1 = (selectedStaff.disc_scores as Record<string, number>)?.[type] || 0;
+                const score2 = (selectedClient.disc_scores as Record<string, number>)?.[type] || 0;
 
                 return (
                   <Card key={type} className="border border-border bg-card p-4">
@@ -263,18 +295,10 @@ export const ClientComparison = () => {
           </div>
         )}
 
-        {!client1 && !client2 && clients && clients.length > 0 && (
+        {!selectedStaff && !selectedClient && staff && staff.length > 0 && clients && clients.length > 0 && (
           <div className="mt-8 rounded-lg border-2 border-dashed border-border p-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Select two clients above to analyze their DISC compatibility
-            </p>
-          </div>
-        )}
-
-        {clients && clients.length < 2 && (
-          <div className="mt-8 rounded-lg border-2 border-dashed border-border p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              You need at least two profiled clients to use the comparison feature
+              Select a staff member and a client above to analyze their DISC compatibility
             </p>
           </div>
         )}
