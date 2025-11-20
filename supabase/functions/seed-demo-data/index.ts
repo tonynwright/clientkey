@@ -167,12 +167,11 @@ Deno.serve(async (req) => {
     
     console.log('Checking for existing demo data...');
     
-    // Find existing demo clients
+    // Find all existing clients and staff for this user to clean up
     const { data: existingDemoClients } = await supabase
       .from('clients')
       .select('id')
-      .eq('user_id', user.id)
-      .in('email', demoEmails);
+      .eq('user_id', user.id);
     
     if (existingDemoClients && existingDemoClients.length > 0) {
       console.log(`Found ${existingDemoClients.length} existing demo clients, cleaning up...`);
@@ -228,8 +227,7 @@ Deno.serve(async (req) => {
     const { data: existingDemoStaff } = await supabase
       .from('staff')
       .select('id')
-      .eq('user_id', user.id)
-      .in('email', demoStaffEmails);
+      .eq('user_id', user.id);
     
     if (existingDemoStaff && existingDemoStaff.length > 0) {
       console.log(`Found ${existingDemoStaff.length} existing demo staff, cleaning up...`);
