@@ -114,59 +114,28 @@ const Dashboard = () => {
 
   const handleOnboardingTryDemo = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Create sample client
-      const { data: client, error: clientError } = await supabase
-        .from("clients")
-        .insert({
-          name: "Sarah Johnson",
-          email: "sarah.demo@example.com",
-          company: "Demo Company Inc.",
-          user_id: user.id,
-          disc_type: "I",
-          disc_scores: {
-            D: 15,
-            I: 32,
-            S: 22,
-            C: 18
-          }
-        })
-        .select()
-        .single();
-
-      if (clientError) throw clientError;
-
-      // Create sample assessment
-      const sampleResponses = Array.from({ length: 24 }, (_, i) => {
-        // Generate realistic responses favoring "I" type
-        const responses = ["D", "I", "S", "C"];
-        if (i % 3 === 0) return "I"; // Favor I responses
-        return responses[Math.floor(Math.random() * responses.length)];
+      toast({
+        title: "Creating demo data...",
+        description: "Setting up 25 diverse client profiles for you.",
       });
 
-      await supabase
-        .from("assessments")
-        .insert({
-          client_id: client.id,
-          responses: sampleResponses,
-          scores: { D: 15, I: 32, S: 22, C: 18 },
-          dominant_type: "I"
-        });
+      const { data, error } = await supabase.functions.invoke('seed-demo-data');
+
+      if (error) throw error;
 
       toast({
-        title: "Demo client created!",
-        description: "Explore Sarah Johnson's profile to see how ClientKey works.",
+        title: "Demo data created!",
+        description: data.message || "Successfully created 25 demo clients with diverse DISC profiles.",
       });
 
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setShowOnboarding(false);
       setActiveTab("clients");
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
     } catch (error) {
-      console.error("Error creating demo client:", error);
+      console.error("Error creating demo data:", error);
       toast({
         title: "Error",
-        description: "Failed to create demo client. Please try again.",
+        description: "Failed to create demo data. Please try again.",
         variant: "destructive",
       });
     }
