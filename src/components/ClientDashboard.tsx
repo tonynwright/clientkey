@@ -8,6 +8,7 @@ import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
 import { useToast } from "@/hooks/use-toast";
 import { ReminderSettings } from "./ReminderSettings";
+import { EmailTemplates } from "./EmailTemplates";
 
 interface Client {
   id: string;
@@ -205,7 +206,10 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
         </Button>
       </div>
 
-      <ReminderSettings />
+      <div className="mb-8 space-y-6">
+        <ReminderSettings />
+        <EmailTemplates />
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="border border-border bg-card p-6">

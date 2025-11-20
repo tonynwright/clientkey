@@ -125,6 +125,31 @@ const handler = async (req: Request): Promise<Response> => {
     let sentCount = 0;
     const baseUrl = Deno.env.get("SUPABASE_URL")!;
 
+    // Fetch custom email template
+    const { data: template, error: templateError } = await supabase
+      .from("email_templates")
+      .select("*")
+      .eq("template_type", "reminder")
+      .single();
+
+    if (templateError) {
+      console.error("Error fetching email template:", templateError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Failed to load email template",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const fromEmail = template.company_name 
+      ? `${template.company_name} <onboarding@resend.dev>`
+      : "ClientKey <onboarding@resend.dev>";
+
     // Send reminders
     for (const client of clientsNeedingReminders) {
       try {
@@ -132,40 +157,20 @@ const handler = async (req: Request): Promise<Response> => {
         const trackingClickUrl = `${baseUrl}/functions/v1/track-email-click?cid=${client.id}&url=${encodeURIComponent(assessmentUrl)}`;
         const trackingPixelUrl = `${baseUrl}/functions/v1/track-email-open?cid=${client.id}`;
 
+        // Replace template variables
+        let emailContent = template.content
+          .replace(/\{\{CLIENT_NAME\}\}/g, client.name)
+          .replace(/\{\{ASSESSMENT_LINK\}\}/g, trackingClickUrl)
+          .replace(/\{\{PRIMARY_COLOR\}\}/g, template.primary_color || '#4F46E5');
+
+        // Add tracking pixel
+        emailContent += `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;" />`;
+
         await resend.emails.send({
-          from: "ClientKey <onboarding@resend.dev>",
+          from: fromEmail,
           to: [client.email],
-          subject: "Reminder: Complete Your DISC Assessment",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #333; border-bottom: 3px solid #4F46E5; padding-bottom: 10px;">Friendly Reminder</h1>
-              
-              <p style="color: #555; font-size: 16px;">Hi ${client.name},</p>
-              
-              <p style="color: #555; font-size: 16px;">
-                We noticed you started but haven't yet completed your DISC personality assessment. 
-                It only takes 5-10 minutes and will help us communicate with you more effectively.
-              </p>
-              
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${trackingClickUrl}" 
-                   style="background-color: #4F46E5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
-                  Complete Assessment Now
-                </a>
-              </div>
-              
-              <p style="color: #888; font-size: 14px;">
-                Or copy this link: <a href="${trackingClickUrl}" style="color: #4F46E5;">${assessmentUrl}</a>
-              </p>
-              
-              <p style="color: #888; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-                This is a friendly reminder. We look forward to understanding your communication style better.
-              </p>
-              
-              <!-- Tracking pixel -->
-              <img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;" />
-            </div>
-          `,
+          subject: template.subject,
+          html: emailContent,
         });
 
         // Track reminder sent with metadata
