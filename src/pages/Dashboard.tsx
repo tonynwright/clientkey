@@ -21,6 +21,7 @@ import { UpgradeDialog } from "@/components/UpgradeDialog";
 import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
+import { Onboarding } from "@/components/Onboarding";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -83,6 +84,24 @@ const Dashboard = () => {
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showPlaybook, setShowPlaybook] = useState(false);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Check if user is new (no clients) and hasn't seen onboarding
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding && clientCount === 0) {
+      setShowOnboarding(true);
+    }
+  }, [clientCount]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    setShowOnboarding(false);
+  };
+
+  const handleOnboardingCreateClient = () => {
+    setActiveTab("add-client");
+  };
 
   const createClient = useMutation({
     mutationFn: async (client: z.infer<typeof clientSchema>) => {
@@ -449,6 +468,12 @@ const Dashboard = () => {
         open={showUpgradeDialog}
         onOpenChange={setShowUpgradeDialog}
         currentTier={subscription?.pricing_tier || 'free'}
+      />
+
+      <Onboarding
+        open={showOnboarding}
+        onComplete={handleOnboardingComplete}
+        onCreateClient={handleOnboardingCreateClient}
       />
     </div>
   );
