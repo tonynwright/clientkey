@@ -3,12 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Users, Target, TrendingUp, MessageSquare, Mail, Brain, Clock, Shield, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { DISCBackground } from "@/components/DISCBackground";
+import { DISCShape } from "@/components/DISCShape";
 
 export default function Index() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
+      <DISCBackground />
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center">
         <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
@@ -79,10 +82,13 @@ export default function Index() {
         </h2>
         
         <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <Card className="border-border">
-            <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-primary" />
+          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <DISCShape type="I" size="lg" />
+            </div>
+            <CardContent className="p-6 text-center relative z-10">
+              <div className="w-16 h-16 bg-disc-i/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-8 w-8 text-disc-i" />
               </div>
               <h3 className="text-xl font-semibold mb-3">1. Send Assessment</h3>
               <p className="text-muted-foreground">
@@ -91,10 +97,13 @@ export default function Index() {
             </CardContent>
           </Card>
 
-          <Card className="border-border">
-            <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Brain className="h-8 w-8 text-primary" />
+          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <DISCShape type="C" size="lg" />
+            </div>
+            <CardContent className="p-6 text-center relative z-10">
+              <div className="w-16 h-16 bg-disc-c/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="h-8 w-8 text-disc-c" />
               </div>
               <h3 className="text-xl font-semibold mb-3">2. Get Insights</h3>
               <p className="text-muted-foreground">
@@ -103,10 +112,13 @@ export default function Index() {
             </CardContent>
           </Card>
 
-          <Card className="border-border">
-            <CardContent className="p-6 text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="h-8 w-8 text-primary" />
+          <Card className="border-border relative overflow-hidden group hover:shadow-lg transition-shadow">
+            <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <DISCShape type="S" size="lg" />
+            </div>
+            <CardContent className="p-6 text-center relative z-10">
+              <div className="w-16 h-16 bg-disc-s/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="h-8 w-8 text-disc-s" />
               </div>
               <h3 className="text-xl font-semibold mb-3">3. Communicate Better</h3>
               <p className="text-muted-foreground">

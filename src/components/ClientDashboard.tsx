@@ -9,6 +9,7 @@ import { ClientProfilePDF } from "./ClientProfilePDF";
 import { useToast } from "@/hooks/use-toast";
 import { ReminderSettings } from "./ReminderSettings";
 import { EmailTemplates } from "./EmailTemplates";
+import { DISCShape } from "./DISCShape";
 
 interface Client {
   id: string;
@@ -31,10 +32,10 @@ interface ClientDashboardProps {
 }
 
 const DISC_COLORS = {
-  D: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200 border-red-300 dark:border-red-700",
-  I: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700",
-  S: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200 border-green-300 dark:border-green-700",
-  C: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200 border-blue-300 dark:border-blue-700",
+  D: "bg-disc-d/10 text-disc-d border-disc-d/30",
+  I: "bg-disc-i/10 text-disc-i border-disc-i/30",
+  S: "bg-disc-s/10 text-disc-s border-disc-s/30",
+  C: "bg-disc-c/10 text-disc-c border-disc-c/30",
 };
 
 export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
@@ -283,10 +284,15 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
             {clients.map((client) => (
               <Card
                 key={client.id}
-                className="border border-border bg-card p-5 hover:shadow-lg transition-shadow cursor-pointer"
+                className="border border-border bg-card p-5 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
                 onClick={() => onSelectClient(client)}
               >
-                <div className="space-y-3">
+                {client.disc_type && (
+                  <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DISCShape type={client.disc_type as 'D' | 'I' | 'S' | 'C'} size="md" />
+                  </div>
+                )}
+                <div className="space-y-3 relative z-10">
                   <div className="flex items-start justify-between">
                     <div>
                       <h3 className="font-semibold text-foreground">{client.name}</h3>

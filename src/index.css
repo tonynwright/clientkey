@@ -38,20 +38,23 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
+    /* DISC Color System */
+    --disc-d: 0 70% 55%;
+    --disc-d-foreground: 0 0% 100%;
+    --disc-i: 45 90% 55%;
+    --disc-i-foreground: 0 0% 100%;
+    --disc-s: 140 50% 50%;
+    --disc-s-foreground: 0 0% 100%;
+    --disc-c: 210 70% 55%;
+    --disc-c-foreground: 0 0% 100%;
+
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -83,6 +86,17 @@ All colors MUST be HSL.
     --border: 220 15% 22%;
     --input: 220 15% 22%;
     --ring: 215 90% 60%;
+
+    /* DISC Colors - Dark Mode */
+    --disc-d: 0 65% 50%;
+    --disc-d-foreground: 0 0% 100%;
+    --disc-i: 45 85% 60%;
+    --disc-i-foreground: 0 0% 10%;
+    --disc-s: 140 45% 45%;
+    --disc-s-foreground: 0 0% 100%;
+    --disc-c: 210 65% 60%;
+    --disc-c-foreground: 0 0% 100%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
