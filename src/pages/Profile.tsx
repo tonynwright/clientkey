@@ -304,7 +304,49 @@ export default function Profile() {
             </CardContent>
           </Card>
 
-          {/* Client Growth Chart */}
+          {/* Upgrade Benefits (Free users only) - Show early to encourage upgrade */}
+          {isFree && (
+            <Card className="glass border-primary/50 animate-fade-up stagger-1">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Unlock Premium Features
+                </CardTitle>
+                <CardDescription>Upgrade to access powerful tools for client management</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">300 Client Profiles</p>
+                    <p className="text-sm text-muted-foreground">Scale your agency with unlimited client assessments</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Target className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Staff-Client Matching</p>
+                    <p className="text-sm text-muted-foreground">Match the right team members with clients</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">AI-Powered Insights</p>
+                    <p className="text-sm text-muted-foreground">Get personalized communication recommendations</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Client Growth Chart - Show for all non-admin users with data */}
           {!isAdmin && growthData.length > 0 && (
             <Card className="glass animate-fade-up stagger-2">
               <CardHeader>
@@ -372,9 +414,9 @@ export default function Profile() {
             </Card>
           )}
 
-          {/* Subscription Timeline (Paid users only) */}
+          {/* Subscription Timeline (Paid users only) - Historical context */}
           {!isFree && !isAdmin && subscription && (
-            <Card className="glass animate-fade-up stagger-2">
+            <Card className="glass animate-fade-up stagger-3">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-primary" />
@@ -445,9 +487,9 @@ export default function Profile() {
             </Card>
           )}
 
-          {/* Debug Panel */}
+          {/* Debug Panel - Technical troubleshooting (last priority) */}
           {!isAdmin && subscription && (
-            <Card className="glass animate-fade-up stagger-3">
+            <Card className="glass animate-fade-up stagger-4">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -514,48 +556,6 @@ export default function Profile() {
                   </div>
                 </CardContent>
               )}
-            </Card>
-          )}
-
-          {/* Upgrade Benefits (Free users only) */}
-          {isFree && (
-            <Card className="glass border-primary/50 animate-fade-up stagger-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-primary" />
-                  Unlock Premium Features
-                </CardTitle>
-                <CardDescription>Upgrade to access powerful tools for client management</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Users className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">300 Client Profiles</p>
-                    <p className="text-sm text-muted-foreground">Scale your agency with unlimited client assessments</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Target className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">Staff-Client Matching</p>
-                    <p className="text-sm text-muted-foreground">Match the right team members with clients</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Zap className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold">AI-Powered Insights</p>
-                    <p className="text-sm text-muted-foreground">Get personalized communication recommendations</p>
-                  </div>
-                </div>
-              </CardContent>
             </Card>
           )}
         </div>
