@@ -23,6 +23,40 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Validate redirect URL to prevent open redirect attacks
+    try {
+      const targetUrl = new URL(redirectUrl);
+      const requestOrigin = req.headers.get("origin") || "";
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+      
+      // Extract base domains for comparison
+      const allowedDomains = [
+        new URL(requestOrigin).hostname,
+        new URL(supabaseUrl).hostname,
+        "localhost"
+      ].filter(Boolean);
+
+      // Check if redirect URL matches expected assessment pattern
+      const isValidPattern = /^https?:\/\/[^\/]+\/assessment\/[0-9a-f-]+$/i.test(redirectUrl);
+      const isAllowedDomain = allowedDomains.some(domain => 
+        targetUrl.hostname === domain || targetUrl.hostname.endsWith(`.${domain}`)
+      );
+
+      if (!isValidPattern || !isAllowedDomain) {
+        console.error("Invalid redirect URL blocked:", redirectUrl);
+        return new Response("Invalid redirect URL", {
+          status: 400,
+          headers: corsHeaders
+        });
+      }
+    } catch (urlError) {
+      console.error("Invalid URL format:", redirectUrl);
+      return new Response("Invalid URL format", {
+        status: 400,
+        headers: corsHeaders
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!

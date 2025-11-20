@@ -47,6 +47,17 @@ const clientSchema = z.object({
     .or(z.literal("")),
 });
 
+const assessmentResultSchema = z.object({
+  responses: z.array(z.string()).length(24, "Assessment must have exactly 24 responses"),
+  scores: z.object({
+    D: z.number().min(0).max(48),
+    I: z.number().min(0).max(48),
+    S: z.number().min(0).max(48),
+    C: z.number().min(0).max(48),
+  }),
+  dominantType: z.enum(['D', 'I', 'S', 'C']),
+});
+
 const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -202,12 +213,25 @@ const Dashboard = () => {
       scores: Record<string, number>;
       dominantType: string;
     }) => {
+      // Validate assessment data
+      const validationResult = assessmentResultSchema.safeParse({
+        responses,
+        scores,
+        dominantType,
+      });
+
+      if (!validationResult.success) {
+        throw new Error("Invalid assessment data: " + validationResult.error.message);
+      }
+
+      const validatedData = validationResult.data;
+
       // Save assessment
       const { error: assessmentError } = await supabase.from("assessments").insert({
         client_id: clientId,
-        responses: responses,
-        scores: scores,
-        dominant_type: dominantType,
+        responses: validatedData.responses,
+        scores: validatedData.scores,
+        dominant_type: validatedData.dominantType,
       });
 
       if (assessmentError) throw assessmentError;
@@ -216,8 +240,8 @@ const Dashboard = () => {
       const { error: clientError } = await supabase
         .from("clients")
         .update({
-          disc_type: dominantType,
-          disc_scores: scores,
+          disc_type: validatedData.dominantType,
+          disc_scores: validatedData.scores,
         })
         .eq("id", clientId);
 
