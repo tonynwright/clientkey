@@ -161,6 +161,34 @@ Deno.serve(async (req) => {
 
     console.log(`Seeding demo data for user: ${user.id}`);
 
+    // Rate limiting: Check last seed time
+    const { data: lastSeed, error: seedLogError } = await supabase
+      .from('demo_seed_log')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (seedLogError) {
+      console.error('Error checking seed log:', seedLogError);
+    }
+
+    if (lastSeed) {
+      const hoursSinceLastSeed = 
+        (Date.now() - new Date(lastSeed.created_at).getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastSeed < 24) {
+        const hoursRemaining = Math.ceil(24 - hoursSinceLastSeed);
+        return new Response(
+          JSON.stringify({ 
+            error: `Demo data can only be reset once per 24 hours. Please try again in ${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'}.` 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+        );
+      }
+    }
+
     // Clean up existing demo data before seeding
     const demoEmails = demoClients.map(c => c.email);
     const demoStaffEmails = demoStaff.map(s => s.email);
@@ -350,6 +378,16 @@ Deno.serve(async (req) => {
     const successfulInsights = insightResults.filter(r => r.success).length;
     
     console.log(`Generated AI insights for ${successfulInsights}/${insertedClients?.length} clients`);
+
+    // Log this seed operation for rate limiting
+    const { error: logError } = await supabase
+      .from('demo_seed_log')
+      .insert({ user_id: user.id });
+    
+    if (logError) {
+      console.error('Error logging seed operation:', logError);
+      // Don't fail the entire operation if logging fails
+    }
 
     return new Response(
       JSON.stringify({ 
