@@ -152,7 +152,7 @@ export type Database = {
           subject: string
           template_type: string
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           company_logo_url?: string | null
@@ -164,7 +164,7 @@ export type Database = {
           subject: string
           template_type: string
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           company_logo_url?: string | null
@@ -176,7 +176,7 @@ export type Database = {
           subject?: string
           template_type?: string
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -306,7 +306,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           updated_at: string
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           cancel_at_period_end?: boolean | null
@@ -320,7 +320,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           cancel_at_period_end?: boolean | null
@@ -334,7 +334,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
