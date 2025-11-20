@@ -29,7 +29,7 @@ import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
 import { SeedingProgressDialog } from "@/components/SeedingProgressDialog";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle } from "lucide-react";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -199,6 +199,33 @@ const Dashboard = () => {
   const handleRestartOnboarding = () => {
     localStorage.removeItem('hasSeenOnboarding');
     setShowOnboarding(true);
+  };
+
+  const handleResetDemoData = async () => {
+    try {
+      setSeedingProgress(true);
+
+      const { data, error } = await supabase.functions.invoke('seed-demo-data');
+
+      if (error) throw error;
+
+      toast({
+        title: "Demo data reset!",
+        description: data.message || "Successfully reset demo environment with fresh sample data.",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
+    } catch (error) {
+      console.error("Error resetting demo data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reset demo data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSeedingProgress(false);
+    }
   };
 
   const createClient = useMutation({
@@ -751,6 +778,23 @@ const Dashboard = () => {
                     >
                       <Target className="h-4 w-4 mr-2" />
                       Access Demo
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between py-4 border-b">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-foreground">Reset Demo Data</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Clear and reseed your demo environment with fresh sample data (25 clients and 25 staff)
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={handleResetDemoData}
+                      variant="outline"
+                      disabled={seedingProgress}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${seedingProgress ? 'animate-spin' : ''}`} />
+                      {seedingProgress ? 'Resetting...' : 'Reset Demo Data'}
                     </Button>
                   </div>
                   
