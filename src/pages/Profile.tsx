@@ -125,12 +125,48 @@ export default function Profile() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl">Subscription</CardTitle>
+                  <CardTitle className="text-xl">Subscription Status</CardTitle>
                   <CardDescription>Manage your ClientKey subscription</CardDescription>
                 </div>
-                <Badge variant="secondary" className="text-lg px-4 py-2">
-                  {tierName}
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Button
+                    onClick={handleRefreshSubscription}
+                    disabled={refreshing}
+                    variant="outline"
+                    size="sm"
+                  >
+                    {refreshing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Refresh
+                      </>
+                    )}
+                  </Button>
+                  <Badge 
+                    variant={isAdmin ? "default" : isFree ? "secondary" : "default"} 
+                    className={`text-lg px-4 py-2 ${
+                      isAdmin ? "bg-primary" : 
+                      subscription?.pricing_tier === 'early_bird' ? "bg-green-500 hover:bg-green-600" : 
+                      subscription?.pricing_tier === 'regular' ? "bg-blue-500 hover:bg-blue-600" : 
+                      "bg-muted"
+                    }`}
+                  >
+                    {isAdmin ? (
+                      <><Shield className="h-4 w-4 mr-2" />Admin</>
+                    ) : subscription?.pricing_tier === 'early_bird' ? (
+                      <><Zap className="h-4 w-4 mr-2" />Early Bird - $19/mo</>
+                    ) : subscription?.pricing_tier === 'regular' ? (
+                      <><Check className="h-4 w-4 mr-2" />Pro - $49/mo</>
+                    ) : (
+                      'Free Plan'
+                    )}
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -179,75 +215,46 @@ export default function Profile() {
 
               <Separator />
 
+              {subscription?.current_period_end && !isFree && !isAdmin && (
+                <div className="bg-muted/30 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Subscription Status</p>
+                      <p className="text-sm text-muted-foreground">
+                        {subscription.cancel_at_period_end 
+                          ? `Ends on ${format(new Date(subscription.current_period_end), 'PPP')}`
+                          : `Renews ${format(new Date(subscription.current_period_end), 'PPP')}`
+                        }
+                      </p>
+                    </div>
+                    <Badge variant={subscription.cancel_at_period_end ? "destructive" : "default"}>
+                      {subscription.cancel_at_period_end ? "Canceling" : "Active"}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3">
                 {isFree ? (
-                  <>
-                    <Button 
-                      onClick={handleUpgrade} 
-                      disabled={loading}
-                      className="gradient-primary"
-                      size="lg"
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      Upgrade to Pro - {subscription?.pricing_tier === 'early_bird' ? '$19' : '$49'}/month
-                    </Button>
-                    <Button
-                      onClick={handleRefreshSubscription}
-                      disabled={refreshing}
-                      variant="outline"
-                      size="lg"
-                    >
-                      {refreshing ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Syncing...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Refresh Subscription
-                        </>
-                      )}
-                    </Button>
-                  </>
+                  <Button 
+                    onClick={handleUpgrade} 
+                    disabled={loading}
+                    className="gradient-primary"
+                    size="lg"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Upgrade to Pro - {subscription?.pricing_tier === 'early_bird' ? '$19' : '$49'}/month
+                  </Button>
                 ) : !isAdmin && (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      onClick={handleManageSubscription}
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Manage Subscription
-                    </Button>
-                    <Button
-                      onClick={handleRefreshSubscription}
-                      disabled={refreshing}
-                      variant="outline"
-                    >
-                      {refreshing ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Syncing...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Sync from Stripe
-                        </>
-                      )}
-                    </Button>
-                  </>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleManageSubscription}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    Manage Subscription in Stripe
+                  </Button>
                 )}
               </div>
-
-              {subscription?.current_period_end && (
-                <p className="text-sm text-muted-foreground">
-                  {subscription.cancel_at_period_end 
-                    ? `Subscription ends on ${format(new Date(subscription.current_period_end), 'PPP')}`
-                    : `Next billing date: ${format(new Date(subscription.current_period_end), 'PPP')}`
-                  }
-                </p>
-              )}
             </CardContent>
           </Card>
 
