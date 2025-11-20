@@ -2,8 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { pdf } from "@react-pdf/renderer";
+import { ClientProfilePDF } from "./ClientProfilePDF";
+import { useToast } from "@/hooks/use-toast";
 
 interface Client {
   id: string;
@@ -27,6 +30,8 @@ const DISC_COLORS = {
 };
 
 export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
+  const { toast } = useToast();
+
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
@@ -39,6 +44,49 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
       return data as Client[];
     },
   });
+
+  const handleExportPDF = async (client: Client) => {
+    if (!client.disc_type || !client.disc_scores) {
+      toast({
+        title: "Cannot export",
+        description: "This client needs to complete their DISC assessment first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const blob = await pdf(
+        <ClientProfilePDF
+          client={{
+            name: client.name,
+            email: client.email,
+            company: client.company,
+            disc_type: client.disc_type,
+            disc_scores: client.disc_scores as Record<string, number>,
+          }}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${client.name.replace(/\s+/g, "_")}_ClientKey_Profile.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF exported",
+        description: "Client profile downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Could not generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const stats = {
     total: clients?.length || 0,
@@ -164,9 +212,32 @@ export const ClientDashboard = ({ onSelectClient }: ClientDashboardProps) => {
                     </div>
                   )}
 
-                  <Button variant="outline" size="sm" className="w-full">
-                    View Profile
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectClient(client);
+                      }}
+                    >
+                      View Profile
+                    </Button>
+                    {client.disc_type && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleExportPDF(client);
+                        }}
+                        title="Export PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </Card>
             ))}

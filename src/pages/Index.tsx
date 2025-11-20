@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DISCAssessment } from "@/components/DISCAssessment";
 import { ClientDashboard } from "@/components/ClientDashboard";
 import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
-import { UserPlus, LayoutDashboard, FileText, Target } from "lucide-react";
+import { ClientProfilePDF } from "@/components/ClientProfilePDF";
+import { UserPlus, LayoutDashboard, FileText, Target, Download } from "lucide-react";
+import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
   name: z
@@ -166,6 +168,49 @@ const Index = () => {
     }
   };
 
+  const handleExportPlaybook = async () => {
+    if (!selectedClient?.disc_type || !selectedClient?.disc_scores) {
+      toast({
+        title: "Cannot export",
+        description: "Client profile is incomplete",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const blob = await pdf(
+        <ClientProfilePDF
+          client={{
+            name: selectedClient.name,
+            email: selectedClient.email,
+            company: selectedClient.company,
+            disc_type: selectedClient.disc_type,
+            disc_scores: selectedClient.disc_scores,
+          }}
+        />
+      ).toBlob();
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${selectedClient.name.replace(/\s+/g, "_")}_ClientKey_Profile.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF exported",
+        description: "Client profile downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Could not generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -265,10 +310,21 @@ const Index = () => {
       <Dialog open={showPlaybook} onOpenChange={setShowPlaybook}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              {selectedClient?.name} - Communication Playbook
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl flex items-center gap-2">
+                <FileText className="h-6 w-6" />
+                {selectedClient?.name} - Communication Playbook
+              </DialogTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportPlaybook}
+                className="gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export PDF
+              </Button>
+            </div>
           </DialogHeader>
           {selectedClient?.disc_type && (
             <CommunicationPlaybook type={selectedClient.disc_type} />
