@@ -18,7 +18,8 @@ import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap } from "lucide-react";
+import { StripeWebhookSetup } from "@/components/StripeWebhookSetup";
+import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
 const clientSchema = z.object({
@@ -298,7 +299,7 @@ const Dashboard = () => {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
+          <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-4 mb-8">
             <TabsTrigger value="dashboard" className="gap-2">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
@@ -310,6 +311,10 @@ const Dashboard = () => {
             <TabsTrigger value="comparison" className="gap-2">
               <GitCompare className="h-4 w-4" />
               Compare
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -369,6 +374,12 @@ const Dashboard = () => {
 
           <TabsContent value="comparison">
             <ClientComparison />
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <div className="max-w-3xl mx-auto space-y-6">
+              <StripeWebhookSetup />
+            </div>
           </TabsContent>
         </Tabs>
       </main>
