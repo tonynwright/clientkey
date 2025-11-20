@@ -1,347 +1,351 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DISCAssessment } from "@/components/DISCAssessment";
-import { ClientDashboard } from "@/components/ClientDashboard";
-import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
-import { ClientProfilePDF } from "@/components/ClientProfilePDF";
-import { ClientComparison } from "@/components/ClientComparison";
-import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare } from "lucide-react";
-import { pdf } from "@react-pdf/renderer";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Check, Users, Target, TrendingUp, MessageSquare, Mail, Brain, Clock, Shield, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-const clientSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .nonempty({ message: "Name is required" })
-    .max(100, { message: "Name must be less than 100 characters" }),
-  email: z
-    .string()
-    .trim()
-    .email({ message: "Invalid email address" })
-    .max(255, { message: "Email must be less than 255 characters" }),
-  company: z
-    .string()
-    .trim()
-    .max(150, { message: "Company must be less than 150 characters" })
-    .optional()
-    .or(z.literal("")),
-});
-
-const Index = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [clientForm, setClientForm] = useState({ name: "", email: "", company: "" });
-  const [currentClientId, setCurrentClientId] = useState<string | null>(null);
-  const [showAssessment, setShowAssessment] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [showPlaybook, setShowPlaybook] = useState(false);
-
-  const createClient = useMutation({
-    mutationFn: async (client: z.infer<typeof clientSchema>) => {
-      const { data, error } = await supabase
-        .from("clients")
-        .insert({
-          name: client.name,
-          email: client.email,
-          company: client.company || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Client created",
-        description: "Now complete their DISC assessment",
-      });
-      setCurrentClientId(data.id);
-      setShowAssessment(true);
-      setClientForm({ name: "", email: "", company: "" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to create client",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const saveAssessment = useMutation({
-    mutationFn: async ({
-      clientId,
-      responses,
-      scores,
-      dominantType,
-    }: {
-      clientId: string;
-      responses: string[];
-      scores: Record<string, number>;
-      dominantType: string;
-    }) => {
-      // Save assessment
-      const { error: assessmentError } = await supabase.from("assessments").insert({
-        client_id: clientId,
-        responses: responses,
-        scores: scores,
-        dominant_type: dominantType,
-      });
-
-      if (assessmentError) throw assessmentError;
-
-      // Update client with DISC type
-      const { error: clientError } = await supabase
-        .from("clients")
-        .update({
-          disc_type: dominantType,
-          disc_scores: scores,
-        })
-        .eq("id", clientId);
-
-      if (clientError) throw clientError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-      toast({
-        title: "Assessment saved",
-        description: "Client profile updated with DISC type",
-      });
-      setShowAssessment(false);
-      setCurrentClientId(null);
-      setActiveTab("dashboard");
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to save assessment",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleCreateClient = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const result = clientSchema.safeParse(clientForm);
-    if (!result.success) {
-      toast({
-        title: "Validation error",
-        description: result.error.errors[0]?.message || "Please check your input",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createClient.mutate(result.data);
-  };
-
-  const handleAssessmentComplete = (
-    responses: string[],
-    scores: Record<string, number>,
-    dominantType: string
-  ) => {
-    if (!currentClientId) return;
-    saveAssessment.mutate({ clientId: currentClientId, responses, scores, dominantType });
-  };
-
-  const handleSelectClient = (client: any) => {
-    setSelectedClient(client);
-    if (client.disc_type) {
-      setShowPlaybook(true);
-    } else {
-      toast({
-        title: "Assessment incomplete",
-        description: "This client hasn't completed their DISC assessment yet",
-      });
-    }
-  };
-
-  const handleExportPlaybook = async () => {
-    if (!selectedClient?.disc_type || !selectedClient?.disc_scores) {
-      toast({
-        title: "Cannot export",
-        description: "Client profile is incomplete",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const blob = await pdf(
-        <ClientProfilePDF
-          client={{
-            name: selectedClient.name,
-            email: selectedClient.email,
-            company: selectedClient.company,
-            disc_type: selectedClient.disc_type,
-            disc_scores: selectedClient.disc_scores,
-          }}
-        />
-      ).toBlob();
-
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `${selectedClient.name.replace(/\s+/g, "_")}_ClientKey_Profile.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
-      toast({
-        title: "PDF exported",
-        description: "Client profile downloaded successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "Could not generate PDF. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
+export default function Index() {
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">ClientKey</h1>
-              <p className="text-sm text-muted-foreground">
-                Client Profiling & Communication Intelligence
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* Hero Section */}
+      <section className="container mx-auto px-4 py-20 text-center">
+        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
+          🔥 Limited Time Offer - First 30 Signups Only
+        </Badge>
+        
+        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+          What Would You Pay to<br />
+          <span className="text-primary">Never Lose a Client?</span>
+        </h1>
+        
+        <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          ClientKey helps agencies understand their clients' personality types and communication styles—so you can deliver exactly what they need, every time.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <Button 
+            size="lg" 
+            className="text-lg px-8 py-6"
+            onClick={() => navigate('/dashboard')}
+          >
+            Start Free Trial
+          </Button>
+          <Button 
+            size="lg" 
+            variant="outline"
+            className="text-lg px-8 py-6"
+            onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            View Pricing
+          </Button>
+        </div>
+
+        <div className="flex flex-wrap gap-6 justify-center text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-primary" />
+            No credit card required
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-primary" />
+            Cancel anytime
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="h-5 w-5 text-primary" />
+            Setup in 5 minutes
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Statement */}
+      <section className="container mx-auto px-4 py-16">
+        <Card className="border-2 border-destructive/20 bg-destructive/5">
+          <CardContent className="p-8 md:p-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+              The Silent Client Killer
+            </h2>
+            <p className="text-lg text-center text-muted-foreground max-w-3xl mx-auto">
+              You're not losing clients because your work is bad. You're losing them because your communication style doesn't match theirs. A detail-oriented client feels rushed when you move too fast. A big-picture client feels micromanaged when you focus on details.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* How It Works */}
+      <section className="container mx-auto px-4 py-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+          How ClientKey Works
+        </h2>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <Card className="border-border">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">1. Send Assessment</h3>
+              <p className="text-muted-foreground">
+                Invite your clients to take a quick 5-minute DISC personality assessment
               </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Brain className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">2. Get Insights</h3>
+              <p className="text-muted-foreground">
+                Instantly understand their communication style, decision-making process, and preferences
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border">
+            <CardContent className="p-6 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="h-8 w-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-3">3. Communicate Better</h3>
+              <p className="text-muted-foreground">
+                Get personalized playbooks showing exactly how to communicate with each client
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl my-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+          Everything You Need
+        </h2>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+          {[
+            {
+              icon: Target,
+              title: "DISC Personality Profiling",
+              description: "Scientific personality assessments that reveal how each client thinks and decides"
+            },
+            {
+              icon: MessageSquare,
+              title: "Communication Playbooks",
+              description: "Specific strategies for emails, meetings, and presentations tailored to each type"
+            },
+            {
+              icon: Users,
+              title: "Team Compatibility Reports",
+              description: "See how different personalities work together and avoid conflicts"
+            },
+            {
+              icon: Mail,
+              title: "Automated Invitations",
+              description: "Send assessment invites automatically with customizable email templates"
+            },
+            {
+              icon: TrendingUp,
+              title: "Client Dashboard",
+              description: "Manage all your clients and their personality profiles in one place"
+            },
+            {
+              icon: Clock,
+              title: "Smart Reminders",
+              description: "Automatic follow-ups to ensure all clients complete their assessments"
+            }
+          ].map((feature, index) => (
+            <Card key={index} className="border-border hover:border-primary/50 transition-colors">
+              <CardContent className="p-6">
+                <feature.icon className="h-10 w-10 text-primary mb-4" />
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-muted-foreground text-sm">{feature.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section id="pricing" className="container mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <Badge className="mb-4 bg-destructive text-destructive-foreground">
+            ⚡ Early Bird Special - Only 30 Spots Available
+          </Badge>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Lock In Your Rate Today
+          </h2>
+          <p className="text-xl text-muted-foreground">
+            After the first 30 signups, the price increases to $49/month
+          </p>
+        </div>
+
+        <div className="max-w-lg mx-auto">
+          <Card className="border-4 border-primary relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-6 py-2 text-sm font-bold">
+              BEST VALUE
             </div>
-            <div className="flex items-center gap-2">
-              <Target className="h-8 w-8 text-primary" />
+            <CardContent className="p-8 md:p-10">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold mb-2">Early Bird Annual</h3>
+                <div className="flex items-baseline justify-center gap-2 mb-2">
+                  <span className="text-5xl font-bold text-primary">$19</span>
+                  <span className="text-xl text-muted-foreground">/month</span>
+                </div>
+                <p className="text-sm text-muted-foreground line-through">Regular: $49/month</p>
+                <Badge variant="outline" className="mt-2">Save $360/year</Badge>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Up to 300 clients</p>
+                    <p className="text-sm text-muted-foreground">Profile unlimited clients</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Up to 300 staff members</p>
+                    <p className="text-sm text-muted-foreground">Full team access</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold">Rate locked for 1 year</p>
+                    <p className="text-sm text-muted-foreground">Never pay more than $19/month</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Unlimited DISC assessments</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Communication playbooks</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Compatibility reports</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Custom email templates</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Priority support</span>
+                </div>
+              </div>
+
+              <Button 
+                className="w-full py-6 text-lg"
+                onClick={() => navigate('/dashboard')}
+              >
+                Claim Your Early Bird Spot
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                30-day money-back guarantee • Cancel anytime
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-sm text-muted-foreground">
+            🔒 Secure payment processing • Your data is encrypted and protected
+          </p>
+        </div>
+      </section>
+
+      {/* Social Proof / Benefits */}
+      <section className="container mx-auto px-4 py-16">
+        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+          Why Agencies Choose ClientKey
+        </h2>
+        
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <Card className="border-border">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Reduce Client Churn</h3>
+              <p className="text-muted-foreground">
+                Stop losing clients due to communication mismatches. Speak their language from day one.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Zap className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Close Deals Faster</h3>
+              <p className="text-muted-foreground">
+                Understand decision-makers instantly and tailor your pitch to their style.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border">
+            <CardContent className="p-6">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <TrendingUp className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Increase Satisfaction</h3>
+              <p className="text-muted-foreground">
+                Deliver exactly what clients want by understanding how they think and communicate.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="container mx-auto px-4 py-20">
+        <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-2 border-primary/20">
+          <CardContent className="p-12 text-center">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+              Don't Let Another Client Walk Away
+            </h2>
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+              Join the first 30 agencies to lock in the $19/month rate and start building stronger client relationships today.
+            </p>
+            <Button 
+              size="lg" 
+              className="text-lg px-12 py-6"
+              onClick={() => navigate('/dashboard')}
+            >
+              Get Started Now - Only $19/Month
+            </Button>
+            <p className="text-sm text-muted-foreground mt-4">
+              ⏰ Limited to first 30 signups • Price increases to $49/month after
+            </p>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-border mt-20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              © 2024 ClientKey. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-sm text-muted-foreground">
+              <button className="hover:text-primary transition-colors">Privacy Policy</button>
+              <button className="hover:text-primary transition-colors">Terms of Service</button>
+              <button className="hover:text-primary transition-colors">Contact</button>
             </div>
           </div>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3 mb-8">
-            <TabsTrigger value="dashboard" className="gap-2">
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="add-client" className="gap-2">
-              <UserPlus className="h-4 w-4" />
-              Add Client
-            </TabsTrigger>
-            <TabsTrigger value="comparison" className="gap-2">
-              <GitCompare className="h-4 w-4" />
-              Compare
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="dashboard">
-            <ClientDashboard onSelectClient={handleSelectClient} />
-          </TabsContent>
-
-          <TabsContent value="add-client">
-            <div className="mx-auto max-w-2xl">
-              <Card className="border border-border bg-card p-8">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-semibold text-foreground">Add New Client</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Create a client profile to start their DISC assessment
-                  </p>
-                </div>
-
-                <form onSubmit={handleCreateClient} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      value={clientForm.name}
-                      onChange={(e) => setClientForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="John Smith"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={clientForm.email}
-                      onChange={(e) => setClientForm((f) => ({ ...f, email: e.target.value }))}
-                      placeholder="john@company.com"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company (Optional)</Label>
-                    <Input
-                      id="company"
-                      value={clientForm.company}
-                      onChange={(e) => setClientForm((f) => ({ ...f, company: e.target.value }))}
-                      placeholder="Acme Corp"
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full" size="lg">
-                    Create Client & Start Assessment
-                  </Button>
-                </form>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="comparison">
-            <ClientComparison />
-          </TabsContent>
-        </Tabs>
-      </main>
-
-      <Dialog open={showAssessment} onOpenChange={setShowAssessment}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl">DISC Personality Assessment</DialogTitle>
-          </DialogHeader>
-          <DISCAssessment onComplete={handleAssessmentComplete} />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showPlaybook} onOpenChange={setShowPlaybook}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-2xl flex items-center gap-2">
-                <FileText className="h-6 w-6" />
-                {selectedClient?.name} - Communication Playbook
-              </DialogTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportPlaybook}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Export PDF
-              </Button>
-            </div>
-          </DialogHeader>
-          {selectedClient?.disc_type && (
-            <CommunicationPlaybook type={selectedClient.disc_type} />
-          )}
-        </DialogContent>
-      </Dialog>
+      </footer>
     </div>
   );
-};
-
-export default Index;
+}
