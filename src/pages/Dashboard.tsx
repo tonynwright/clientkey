@@ -72,6 +72,42 @@ const Dashboard = () => {
     }
   }, [user, navigate]);
 
+  // Demo account inactivity timeout (30 minutes)
+  useEffect(() => {
+    if (user?.email !== 'demo@clientkey.com') return;
+
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+    let inactivityTimer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        toast({
+          title: "Demo Session Expired",
+          description: "You've been logged out due to inactivity. Sign up for your own account!",
+        });
+        signOut();
+      }, INACTIVITY_TIMEOUT);
+    };
+
+    // Track user activity
+    const activities = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    activities.forEach(activity => {
+      document.addEventListener(activity, resetTimer);
+    });
+
+    // Initialize timer
+    resetTimer();
+
+    // Cleanup
+    return () => {
+      clearTimeout(inactivityTimer);
+      activities.forEach(activity => {
+        document.removeEventListener(activity, resetTimer);
+      });
+    };
+  }, [user, signOut, toast]);
+
   // Handle successful checkout
   useEffect(() => {
     const success = searchParams.get('success');
