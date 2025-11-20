@@ -95,7 +95,8 @@ const handler = async (req: Request): Promise<Response> => {
     let emailContent = template.content
       .replace(/\{\{CLIENT_NAME\}\}/g, sanitizedClientName)
       .replace(/\{\{ASSESSMENT_LINK\}\}/g, trackingClickUrl)
-      .replace(/\{\{PRIMARY_COLOR\}\}/g, template.primary_color || '#4F46E5');
+      .replace(/\{\{PRIMARY_COLOR\}\}/g, template.primary_color || '#4F46E5')
+      .replace(/\{\{BILLING_PORTAL_LINK\}\}/g, 'https://billing.stripe.com/p/login/28EeVdg045s40cf70CbV600');
 
     // Add tracking pixel
     emailContent += `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;" />`;

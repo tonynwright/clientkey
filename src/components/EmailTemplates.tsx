@@ -91,7 +91,7 @@ export function EmailTemplates() {
           <CardTitle>Email Templates</CardTitle>
         </div>
         <CardDescription>
-          Customize your email invitation and reminder templates. Use variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}
+          Customize your email invitation and reminder templates. Use variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -206,7 +206,7 @@ function TemplateEditor({ template, onUpdate, onSave, saving }: TemplateEditorPr
           className="min-h-[300px] font-mono text-sm"
         />
         <p className="text-sm text-muted-foreground">
-          Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}
+          Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
         </p>
       </div>
 
