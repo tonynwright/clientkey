@@ -21,13 +21,15 @@ interface EmailTemplate {
   primary_color: string;
 }
 
-export function EmailTemplates() {
+export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sendingTest, setSendingTest] = useState(false);
   const [invitationTemplate, setInvitationTemplate] = useState<EmailTemplate | null>(null);
   const [reminderTemplate, setReminderTemplate] = useState<EmailTemplate | null>(null);
-  const { isDemoAccount, user } = useAuth();
+  const { isDemoAccount, user, subscription } = useAuth();
+  
+  const isPaidUser = subscription?.pricing_tier === "early_bird" || subscription?.pricing_tier === "regular";
 
   useEffect(() => {
     fetchTemplates();
@@ -56,6 +58,12 @@ export function EmailTemplates() {
   const handleSaveTemplate = async (template: EmailTemplate) => {
     if (isDemoAccount) {
       toast.error("Demo account is read-only. Sign up for your own account to edit templates!");
+      return;
+    }
+
+    if (!isPaidUser) {
+      toast.error("Email customization is a Pro feature. Upgrade to customize your templates!");
+      onUpgrade?.();
       return;
     }
 
@@ -146,6 +154,7 @@ export function EmailTemplates() {
                 onSendTest={handleSendTestEmail}
                 saving={saving}
                 sendingTest={sendingTest}
+                isPaidUser={isPaidUser}
               />
             )}
           </TabsContent>
@@ -159,6 +168,7 @@ export function EmailTemplates() {
                 onSendTest={handleSendTestEmail}
                 saving={saving}
                 sendingTest={sendingTest}
+                isPaidUser={isPaidUser}
               />
             )}
           </TabsContent>
@@ -175,9 +185,10 @@ interface TemplateEditorProps {
   onSendTest: (template: EmailTemplate) => void;
   saving: boolean;
   sendingTest: boolean;
+  isPaidUser: boolean;
 }
 
-function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendingTest }: TemplateEditorProps) {
+function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendingTest, isPaidUser }: TemplateEditorProps) {
   const [showCode, setShowCode] = useState(false);
   
   const handleChange = (field: keyof EmailTemplate, value: string) => {
@@ -205,6 +216,17 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Editor Section */}
       <div className="space-y-4">
+        {!isPaidUser && (
+          <div className="bg-muted/50 border border-border rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="secondary">Pro Feature</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Email template customization is available on Pro plans. You can still send invitations with default templates, but upgrade to customize branding, colors, and content.
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="subject">Subject Line</Label>
           <Input
@@ -212,6 +234,7 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
             value={template.subject}
             onChange={(e) => handleChange("subject", e.target.value)}
             placeholder="Email subject"
+            disabled={!isPaidUser}
           />
         </div>
 
@@ -223,6 +246,7 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
               value={template.company_name || ""}
               onChange={(e) => handleChange("company_name", e.target.value)}
               placeholder="Your Company Name"
+              disabled={!isPaidUser}
             />
           </div>
 
@@ -238,12 +262,14 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
                 value={template.primary_color}
                 onChange={(e) => handleChange("primary_color", e.target.value)}
                 className="w-20 h-10 p-1 cursor-pointer"
+                disabled={!isPaidUser}
               />
               <Input
                 value={template.primary_color}
                 onChange={(e) => handleChange("primary_color", e.target.value)}
                 placeholder="#4F46E5"
                 className="flex-1"
+                disabled={!isPaidUser}
               />
             </div>
           </div>
@@ -256,6 +282,7 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
             value={template.company_logo_url || ""}
             onChange={(e) => handleChange("company_logo_url", e.target.value)}
             placeholder="https://example.com/logo.png"
+            disabled={!isPaidUser}
           />
         </div>
 
@@ -267,6 +294,7 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
               variant="outline"
               size="sm"
               onClick={() => setShowCode(!showCode)}
+              disabled={!isPaidUser}
             >
               {showCode ? (
                 <>
@@ -289,6 +317,7 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
                 onChange={(e) => handleChange("content", e.target.value)}
                 placeholder="Email HTML content"
                 className="min-h-[300px] font-mono text-sm"
+                disabled={!isPaidUser}
               />
               <p className="text-xs text-muted-foreground">
                 Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
@@ -307,9 +336,10 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
             {!sendingTest && <Send className="mr-2 h-4 w-4" />}
             Send Test Email
           </Button>
-          <Button onClick={() => onSave(template)} disabled={saving || sendingTest}>
+          <Button onClick={() => onSave(template)} disabled={saving || sendingTest || !isPaidUser}>
             {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Save Template
+            {!isPaidUser && <Badge variant="secondary" className="ml-2">Pro</Badge>}
           </Button>
         </div>
       </div>
