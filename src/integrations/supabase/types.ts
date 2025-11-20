@@ -82,6 +82,42 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          company_logo_url: string | null
+          company_name: string | null
+          content: string
+          created_at: string
+          id: string
+          primary_color: string | null
+          subject: string
+          template_type: string
+          updated_at: string
+        }
+        Insert: {
+          company_logo_url?: string | null
+          company_name?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          primary_color?: string | null
+          subject: string
+          template_type: string
+          updated_at?: string
+        }
+        Update: {
+          company_logo_url?: string | null
+          company_name?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          primary_color?: string | null
+          subject?: string
+          template_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_tracking: {
         Row: {
           client_id: string

@@ -35,43 +35,36 @@ const handler = async (req: Request): Promise<Response> => {
     const trackingClickUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/track-email-click?cid=${clientId}&url=${encodeURIComponent(assessmentUrl)}`;
     const trackingPixelUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/track-email-open?cid=${clientId}`;
 
+    // Fetch custom email template
+    const { data: template, error: templateError } = await supabase
+      .from("email_templates")
+      .select("*")
+      .eq("template_type", "invitation")
+      .single();
+
+    if (templateError) {
+      console.error("Error fetching email template:", templateError);
+      throw new Error("Failed to load email template");
+    }
+
+    // Replace template variables
+    let emailContent = template.content
+      .replace(/\{\{CLIENT_NAME\}\}/g, clientName)
+      .replace(/\{\{ASSESSMENT_LINK\}\}/g, trackingClickUrl)
+      .replace(/\{\{PRIMARY_COLOR\}\}/g, template.primary_color || '#4F46E5');
+
+    // Add tracking pixel
+    emailContent += `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;" />`;
+
+    const fromEmail = template.company_name 
+      ? `${template.company_name} <onboarding@resend.dev>`
+      : "ClientKey <onboarding@resend.dev>";
+
     const emailResponse = await resend.emails.send({
-      from: "ClientKey <onboarding@resend.dev>",
+      from: fromEmail,
       to: [clientEmail],
-      subject: "Complete Your DISC Personality Assessment",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; border-bottom: 3px solid #4F46E5; padding-bottom: 10px;">DISC Personality Assessment</h1>
-          
-          <p style="color: #555; font-size: 16px;">Hi ${clientName},</p>
-          
-          <p style="color: #555; font-size: 16px;">
-            We'd like to understand your communication style better. Please take a few minutes to complete this DISC personality assessment.
-          </p>
-          
-          <p style="color: #555; font-size: 16px;">
-            The assessment consists of 24 quick questions and takes about 5-10 minutes to complete.
-          </p>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${trackingClickUrl}" 
-               style="background-color: #4F46E5; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
-              Take Assessment
-            </a>
-          </div>
-          
-          <p style="color: #888; font-size: 14px;">
-            Or copy this link: <a href="${trackingClickUrl}" style="color: #4F46E5;">${assessmentUrl}</a>
-          </p>
-          
-          <p style="color: #888; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
-            This assessment will help us communicate with you more effectively.
-          </p>
-          
-          <!-- Tracking pixel -->
-          <img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:block;" />
-        </div>
-      `,
+      subject: template.subject,
+      html: emailContent,
     });
 
     console.log("Email sent successfully:", emailResponse);
