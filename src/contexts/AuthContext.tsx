@@ -65,6 +65,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setClientCount(count || 0);
   };
 
+  const syncSubscriptionFromStripe = async (userId: string) => {
+    try {
+      // Ask backend to verify latest subscription directly with Stripe
+      await supabase.functions.invoke('verify-subscription');
+    } catch (error) {
+      console.error('Error syncing subscription from Stripe', error);
+    } finally {
+      // Always refresh from database afterwards
+      await fetchSubscription(userId);
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -74,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         if (session?.user) {
           setTimeout(() => {
-            fetchSubscription(session.user.id);
+            syncSubscriptionFromStripe(session.user.id);
           }, 0);
         }
       }
@@ -86,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsDemoAccount(session?.user?.email === 'demo@clientkey.com');
 
       if (session?.user) {
-        fetchSubscription(session.user.id);
+        syncSubscriptionFromStripe(session.user.id);
       }
     });
 
