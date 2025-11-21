@@ -114,23 +114,36 @@ serve(async (req) => {
         if (existingSub) {
           // Count addon packs (price_1SVzWNDdXbYbPM4z2D7jHiJ4)
           const ADDON_PRICE_ID = "price_1SVzWNDdXbYbPM4z2D7jHiJ4";
+          const EARLY_BIRD_PRICE = "price_1SVPruDdXbYbPM4zxhtwVLHX";
+          const REGULAR_PRICE = "price_1SVPrvDdXbYbPM4zboOLwcoY";
+          
           const addonCount = subscription.items.data.filter(
             (item: Stripe.SubscriptionItem) => item.price.id === ADDON_PRICE_ID
           ).reduce((sum: number, item: Stripe.SubscriptionItem) => sum + (item.quantity || 0), 0);
           
           console.log(`Found ${addonCount} addon packs in subscription`);
 
+          // Determine pricing tier based on current price
+          const mainItem = subscription.items.data.find(
+            (item: Stripe.SubscriptionItem) => 
+              item.price.id === EARLY_BIRD_PRICE || item.price.id === REGULAR_PRICE
+          );
+          const newTier = mainItem?.price.id === EARLY_BIRD_PRICE ? "early_bird" : "regular";
+          const newPrice = mainItem?.price.id === EARLY_BIRD_PRICE ? 1900 : 4900;
+
           await supabaseClient
             .from("subscriptions")
             .update({
               status: subscription.status,
+              pricing_tier: newTier,
+              monthly_price: newPrice,
               current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               cancel_at_period_end: subscription.cancel_at_period_end,
               addon_client_packs: addonCount,
             })
             .eq("stripe_subscription_id", subscription.id);
-          console.log(`Subscription updated with ${addonCount} addon packs`);
+          console.log(`Subscription updated with ${addonCount} addon packs, tier: ${newTier}`);
         }
         break;
       }
