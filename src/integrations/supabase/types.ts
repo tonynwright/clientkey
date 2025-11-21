@@ -236,6 +236,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_scans: {
+        Row: {
+          created_at: string
+          findings: Json
+          findings_count: number
+          id: string
+          new_findings_count: number | null
+          scan_date: string
+        }
+        Insert: {
+          created_at?: string
+          findings: Json
+          findings_count: number
+          id?: string
+          new_findings_count?: number | null
+          scan_date?: string
+        }
+        Update: {
+          created_at?: string
+          findings?: Json
+          findings_count?: number
+          id?: string
+          new_findings_count?: number | null
+          scan_date?: string
+        }
+        Relationships: []
+      }
       signup_counter: {
         Row: {
           early_bird_count: number
