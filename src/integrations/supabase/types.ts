@@ -141,6 +141,33 @@ export type Database = {
           },
         ]
       }
+      early_bird_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          notification_sent_at: string
+          price_increase_date: string
+          subscription_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notification_sent_at?: string
+          price_increase_date: string
+          subscription_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notification_sent_at?: string
+          price_increase_date?: string
+          subscription_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           company_logo_url: string | null
