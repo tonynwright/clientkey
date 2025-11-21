@@ -662,13 +662,31 @@ const Dashboard = () => {
                           </li>
                         </ul>
                       </div>
-                      <Button 
-                        size="lg"
-                        onClick={() => setShowUpgradeDialog(true)}
-                      >
-                        <Zap className="h-4 w-4 mr-2" />
-                        Upgrade to Pro
-                      </Button>
+                      <div className="space-y-2">
+                        <Button 
+                          size="lg"
+                          onClick={() => setShowUpgradeDialog(true)}
+                          className="w-full"
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Upgrade to Pro
+                        </Button>
+                        <Button 
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            await refreshSubscription();
+                            toast({
+                              title: "Subscription refreshed",
+                              description: "Your subscription status has been updated",
+                            });
+                          }}
+                          className="w-full"
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Already upgraded? Refresh status
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
