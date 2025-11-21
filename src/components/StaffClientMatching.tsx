@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug, Copy } from "lucide-react";
+import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug, Copy, Download } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
@@ -194,10 +194,65 @@ export function StaffClientMatching() {
     try {
       const logsText = debugLogs.join('\n');
       await navigator.clipboard.writeText(logsText);
-      toast.success("Debug logs copied to clipboard");
+      toast({ title: "Debug logs copied to clipboard" });
     } catch (error) {
-      toast.error("Failed to copy logs to clipboard");
+      toast({ title: "Failed to copy logs", variant: "destructive" });
     }
+  };
+  
+  const exportDebugReport = () => {
+    const report = {
+      timestamp: new Date().toISOString(),
+      systemState: {
+        clientsLoaded: clients?.length || 0,
+        staffLoaded: staff?.length || 0,
+        matchesGenerated: matches.length,
+        selectedClient: selectedClient || "All",
+        loadingClients,
+        loadingStaff,
+        hasClientsError: !!clientsError,
+        hasStaffError: !!staffError,
+      },
+      clients: clients?.map(c => ({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        company: c.company,
+        disc_type: c.disc_type,
+        disc_scores: c.disc_scores,
+      })),
+      staff: staff?.map(s => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        role: s.role,
+        disc_type: s.disc_type,
+        disc_scores: s.disc_scores,
+      })),
+      matches: matches.map(m => ({
+        clientName: m.clientName,
+        staffName: m.staffName,
+        score: m.score,
+        recommendation: m.recommendation,
+      })),
+      debugLogs,
+      errors: {
+        clientsError: clientsError ? (clientsError as Error).message : null,
+        staffError: staffError ? (staffError as Error).message : null,
+      },
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `debug-report-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({ title: "Debug report exported successfully" });
   };
   
   useEffect(() => {
@@ -383,15 +438,25 @@ export function StaffClientMatching() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">Debug Information</CardTitle>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={copyLogsToClipboard}
-                  disabled={debugLogs.length === 0}
-                >
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy Logs
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={copyLogsToClipboard}
+                    disabled={debugLogs.length === 0}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy Logs
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={exportDebugReport}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Report
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
