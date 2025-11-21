@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug } from "lucide-react";
+import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug, Copy } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
@@ -187,6 +188,16 @@ export function StaffClientMatching() {
   const addDebugLog = (message: string) => {
     console.log(message);
     setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
+  
+  const copyLogsToClipboard = async () => {
+    try {
+      const logsText = debugLogs.join('\n');
+      await navigator.clipboard.writeText(logsText);
+      toast.success("Debug logs copied to clipboard");
+    } catch (error) {
+      toast.error("Failed to copy logs to clipboard");
+    }
   };
   
   useEffect(() => {
@@ -370,7 +381,18 @@ export function StaffClientMatching() {
         <CollapsibleContent>
           <Card className="mt-2 mb-4">
             <CardHeader>
-              <CardTitle className="text-sm">Debug Information</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm">Debug Information</CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={copyLogsToClipboard}
+                  disabled={debugLogs.length === 0}
+                >
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Logs
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
