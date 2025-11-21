@@ -28,6 +28,7 @@ interface TutorialStep {
   isPro?: boolean;
   benefits: string[];
   actionText?: string;
+  videoUrl?: string;
 }
 
 const tutorialSteps: TutorialStep[] = [
@@ -41,6 +42,7 @@ const tutorialSteps: TutorialStep[] = [
       "Match staff with ideal client personalities",
       "Automate client onboarding workflows",
     ],
+    videoUrl: "", // Add your welcome video URL here
   },
   {
     title: "Add Your First Client",
@@ -54,6 +56,7 @@ const tutorialSteps: TutorialStep[] = [
       "Pro tier: Up to 300 clients + add-ons",
     ],
     actionText: "Go to Add Client tab",
+    videoUrl: "", // Add your "Add Client" walkthrough video URL here
   },
   {
     title: "DISC Personality Assessment",
@@ -65,6 +68,7 @@ const tutorialSteps: TutorialStep[] = [
       "Instant personality type results",
       "Visual score breakdown by dimension",
     ],
+    videoUrl: "", // Add your DISC assessment demo video URL here
   },
   {
     title: "Communication Playbooks",
@@ -76,6 +80,7 @@ const tutorialSteps: TutorialStep[] = [
       "Conflict resolution strategies",
       "Motivation and decision-making insights",
     ],
+    videoUrl: "", // Add your communication playbooks video URL here
   },
   {
     title: "Staff Management",
@@ -88,6 +93,7 @@ const tutorialSteps: TutorialStep[] = [
       "Build well-balanced teams",
     ],
     actionText: "Go to Staff tab",
+    videoUrl: "", // Add your staff management video URL here
   },
   {
     title: "Staff-Client Matching",
@@ -101,6 +107,7 @@ const tutorialSteps: TutorialStep[] = [
       "Avoid personality conflicts",
       "Maximize team effectiveness",
     ],
+    videoUrl: "", // Add your staff-client matching video URL here
   },
   {
     title: "Email Invitations",
@@ -112,6 +119,7 @@ const tutorialSteps: TutorialStep[] = [
       "Automatic email tracking",
       "Multiple reminder options",
     ],
+    videoUrl: "", // Add your email invitations video URL here
   },
   {
     title: "Custom Email Templates",
@@ -125,6 +133,7 @@ const tutorialSteps: TutorialStep[] = [
       "Use dynamic variables",
       "A/B test different approaches",
     ],
+    videoUrl: "", // Add your email templates customization video URL here
   },
   {
     title: "Automated Onboarding Sequences",
@@ -138,6 +147,7 @@ const tutorialSteps: TutorialStep[] = [
       "Perfect for client nurturing",
     ],
     actionText: "View in Emails tab",
+    videoUrl: "", // Add your onboarding sequences video URL here
   },
   {
     title: "Email Analytics Dashboard",
@@ -151,6 +161,7 @@ const tutorialSteps: TutorialStep[] = [
       "Performance over time",
       "Optimize your outreach",
     ],
+    videoUrl: "", // Add your email analytics video URL here
   },
   {
     title: "AI-Generated Insights",
@@ -164,6 +175,7 @@ const tutorialSteps: TutorialStep[] = [
       "Conflict management strategies",
       "Tailored to each client",
     ],
+    videoUrl: "", // Add your AI insights video URL here
   },
   {
     title: "PDF Exports & Reports",
@@ -177,6 +189,7 @@ const tutorialSteps: TutorialStep[] = [
       "Branded and professional",
       "Share with clients or team",
     ],
+    videoUrl: "", // Add your PDF exports video URL here
   },
   {
     title: "You're All Set!",
@@ -189,6 +202,7 @@ const tutorialSteps: TutorialStep[] = [
       "Cancel anytime, no commitments",
     ],
     actionText: "Start using ClientKey",
+    videoUrl: "", // Add your getting started video URL here (optional)
   },
 ];
 
@@ -261,6 +275,18 @@ export const ComprehensiveTutorial = ({ open, onComplete, onSkip }: Comprehensiv
 
         <div className="space-y-6 py-4">
           <Progress value={progress} className="h-2" />
+
+          {step.videoUrl && (
+            <div className="relative aspect-video rounded-lg overflow-hidden bg-muted mb-4">
+              <iframe
+                src={step.videoUrl}
+                title={`${step.title} Tutorial Video`}
+                className="absolute inset-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
 
           <Card className={step.isPro ? "border-primary/50 bg-gradient-to-br from-primary/5 to-purple-600/5" : ""}>
             <CardContent className="pt-6 space-y-4">
