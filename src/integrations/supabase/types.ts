@@ -49,6 +49,60 @@ export type Database = {
           },
         ]
       }
+      client_onboarding_progress: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          current_step: number
+          id: string
+          is_paused: boolean
+          last_email_sent_at: string | null
+          sequence_id: string
+          started_at: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          is_paused?: boolean
+          last_email_sent_at?: string | null
+          sequence_id: string
+          started_at?: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          is_paused?: boolean
+          last_email_sent_at?: string | null
+          sequence_id?: string
+          started_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_onboarding_progress_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_onboarding_progress_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           company: string | null
@@ -238,6 +292,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      onboarding_sequence_steps: {
+        Row: {
+          created_at: string
+          delay_days: number
+          email_content: string
+          email_subject: string
+          id: string
+          sequence_id: string
+          step_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          delay_days?: number
+          email_content: string
+          email_subject: string
+          id?: string
+          sequence_id: string
+          step_order: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          delay_days?: number
+          email_content?: string
+          email_subject?: string
+          id?: string
+          sequence_id?: string
+          step_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_sequence_steps_sequence_id_fkey"
+            columns: ["sequence_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_sequences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      onboarding_sequences: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       reminder_settings: {
         Row: {
