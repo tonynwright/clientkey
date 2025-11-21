@@ -9,7 +9,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Tag, Percent, DollarSign, Calendar, Users } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Loader2, Tag, Percent, DollarSign, Calendar, Users, Archive } from "lucide-react";
 import { z } from "zod";
 
 const couponSchema = z.object({
@@ -33,6 +43,8 @@ const couponSchema = z.object({
 export function CouponManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<any>(null);
   const [couponForm, setCouponForm] = useState({
     name: "",
     discountType: "percent",
@@ -82,6 +94,32 @@ export function CouponManagement() {
       toast({
         title: "Error",
         description: error.message || "Failed to create coupon",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deactivateCoupon = useMutation({
+    mutationFn: async (couponId: string) => {
+      const { data, error } = await supabase.functions.invoke("deactivate-coupon", {
+        body: { coupon_id: couponId },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coupons"] });
+      toast({
+        title: "Coupon deactivated",
+        description: "The coupon can no longer be redeemed by customers.",
+      });
+      setDeactivateDialogOpen(false);
+      setSelectedCoupon(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to deactivate coupon",
         variant: "destructive",
       });
     },
@@ -174,6 +212,17 @@ export function CouponManagement() {
     }
 
     createCoupon.mutate(couponData);
+  };
+
+  const handleDeactivateCoupon = (coupon: any) => {
+    setSelectedCoupon(coupon);
+    setDeactivateDialogOpen(true);
+  };
+
+  const confirmDeactivate = () => {
+    if (selectedCoupon) {
+      deactivateCoupon.mutate(selectedCoupon.id);
+    }
   };
 
   return (
@@ -396,17 +445,21 @@ export function CouponManagement() {
               ) : (
                 <div className="space-y-3">
                   {coupons?.data?.map((coupon: any) => (
-                    <Card key={coupon.id}>
+                    <Card key={coupon.id} className={!coupon.valid ? "opacity-60" : ""}>
                       <CardContent className="pt-6">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <code className="text-lg font-mono font-semibold bg-muted px-2 py-1 rounded">
                                 {coupon.name || coupon.id}
                               </code>
-                              {coupon.valid && (
+                              {coupon.valid ? (
                                 <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
                                   Active
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="bg-muted text-muted-foreground border-muted-foreground/20">
+                                  Deactivated
                                 </Badge>
                               )}
                             </div>
@@ -436,11 +489,22 @@ export function CouponManagement() {
                                   Expires: {new Date(coupon.redeem_by * 1000).toLocaleDateString()}
                                 </span>
                               )}
-                              {!coupon.max_redemptions && !coupon.redeem_by && (
+                              {!coupon.max_redemptions && !coupon.redeem_by && coupon.valid && (
                                 <span className="text-green-600 dark:text-green-500">No limits</span>
                               )}
                             </div>
                           </div>
+                          {coupon.valid && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeactivateCoupon(coupon)}
+                              className="shrink-0 gap-2"
+                            >
+                              <Archive className="h-4 w-4" />
+                              Deactivate
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -451,6 +515,40 @@ export function CouponManagement() {
           </Tabs>
         </CardContent>
       </Card>
+
+      <AlertDialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate Coupon?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will prevent new customers from using the coupon code{" "}
+              <code className="font-mono font-semibold bg-muted px-2 py-1 rounded">
+                {selectedCoupon?.name || selectedCoupon?.id}
+              </code>
+              . Existing redemption history will be preserved, but the coupon can no longer be applied to new checkouts.
+              <br /><br />
+              <strong>This action cannot be undone.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeactivate}
+              disabled={deactivateCoupon.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deactivateCoupon.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deactivating...
+                </>
+              ) : (
+                "Deactivate Coupon"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
