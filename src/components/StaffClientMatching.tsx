@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Database } from "@/integrations/supabase/types";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
@@ -131,17 +132,26 @@ const discCompatibilityMatrix: Record<string, Record<string, { score: number; st
 };
 
 function calculateCompatibility(client: Client, staff: Staff): CompatibilityScore {
+  console.log(`[MATCHING] Calculating compatibility for ${staff.name} → ${client.name}`);
+  console.log(`[MATCHING] Staff DISC: ${staff.disc_type}`, staff.disc_scores);
+  console.log(`[MATCHING] Client DISC: ${client.disc_type}`, client.disc_scores);
+  
   const baseCompatibility = discCompatibilityMatrix[staff.disc_type]?.[client.disc_type] || 
                            { score: 50, strengths: ["Neutral compatibility"], challenges: ["Unknown compatibility pattern"] };
   
+  console.log(`[MATCHING] Base compatibility score: ${baseCompatibility.score}`);
+  
   // Calculate score variance bonus/penalty
-  const scoreDiff = Math.abs(
-    (staff.disc_scores.D + staff.disc_scores.I + staff.disc_scores.S + staff.disc_scores.C) -
-    (client.disc_scores.D + client.disc_scores.I + client.disc_scores.S + client.disc_scores.C)
-  );
+  const staffTotal = staff.disc_scores.D + staff.disc_scores.I + staff.disc_scores.S + staff.disc_scores.C;
+  const clientTotal = client.disc_scores.D + client.disc_scores.I + client.disc_scores.S + client.disc_scores.C;
+  const scoreDiff = Math.abs(staffTotal - clientTotal);
   const varianceAdjustment = Math.max(-10, Math.min(10, (100 - scoreDiff) / 10));
   
+  console.log(`[MATCHING] Staff total: ${staffTotal}, Client total: ${clientTotal}`);
+  console.log(`[MATCHING] Score difference: ${scoreDiff}, Variance adjustment: ${varianceAdjustment}`);
+  
   const finalScore = Math.min(100, Math.max(0, baseCompatibility.score + varianceAdjustment));
+  console.log(`[MATCHING] Final score: ${finalScore}`);
   
   let recommendation = "";
   if (finalScore >= 80) {
@@ -154,7 +164,7 @@ function calculateCompatibility(client: Client, staff: Staff): CompatibilityScor
     recommendation = "Challenging match - significant differences to manage";
   }
   
-  return {
+  const result = {
     clientId: client.id,
     clientName: client.name,
     staffId: staff.id,
@@ -164,46 +174,91 @@ function calculateCompatibility(client: Client, staff: Staff): CompatibilityScor
     challenges: baseCompatibility.challenges,
     recommendation
   };
+  
+  console.log(`[MATCHING] Result:`, result);
+  return result;
 }
 
 export function StaffClientMatching() {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
   
-  const { data: clients, isLoading: loadingClients } = useQuery({
+  const addDebugLog = (message: string) => {
+    console.log(message);
+    setDebugLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  };
+  
+  useEffect(() => {
+    addDebugLog("[INIT] StaffClientMatching component mounted");
+  }, []);
+  
+  const { data: clients, isLoading: loadingClients, error: clientsError } = useQuery({
     queryKey: ["clients"],
     queryFn: async () => {
+      addDebugLog("[FETCH] Starting clients query...");
       const { data, error } = await supabase
         .from("clients")
         .select("*")
         .not("disc_type", "is", null)
         .order("name");
       
-      if (error) throw error;
-      return data.map(client => ({
+      if (error) {
+        addDebugLog(`[ERROR] Clients query failed: ${error.message}`);
+        throw error;
+      }
+      
+      const clients = data.map(client => ({
         ...client,
         disc_scores: client.disc_scores as DISCScores
       })) as Client[];
+      
+      addDebugLog(`[SUCCESS] Loaded ${clients.length} clients with DISC profiles`);
+      clients.forEach(c => {
+        addDebugLog(`  - ${c.name} (${c.disc_type}): D=${c.disc_scores.D} I=${c.disc_scores.I} S=${c.disc_scores.S} C=${c.disc_scores.C}`);
+      });
+      
+      return clients;
     },
   });
 
-  const { data: staff, isLoading: loadingStaff } = useQuery({
+  const { data: staff, isLoading: loadingStaff, error: staffError } = useQuery({
     queryKey: ["staff"],
     queryFn: async () => {
+      addDebugLog("[FETCH] Starting staff query...");
       const { data, error } = await supabase
         .from("staff")
         .select("*")
         .not("disc_type", "is", null)
         .order("name");
       
-      if (error) throw error;
-      return data.map(member => ({
+      if (error) {
+        addDebugLog(`[ERROR] Staff query failed: ${error.message}`);
+        throw error;
+      }
+      
+      const staff = data.map(member => ({
         ...member,
         disc_scores: member.disc_scores as DISCScores
       })) as Staff[];
+      
+      addDebugLog(`[SUCCESS] Loaded ${staff.length} staff with DISC profiles`);
+      staff.forEach(s => {
+        addDebugLog(`  - ${s.name} (${s.disc_type}): D=${s.disc_scores.D} I=${s.disc_scores.I} S=${s.disc_scores.S} C=${s.disc_scores.C}`);
+      });
+      
+      return staff;
     },
   });
 
   const matches: CompatibilityScore[] = [];
+  
+  useEffect(() => {
+    if (clients && staff) {
+      addDebugLog(`[CALCULATE] Starting compatibility calculations with ${clients.length} clients and ${staff.length} staff`);
+      addDebugLog(`[CALCULATE] Selected client filter: ${selectedClient || "All clients"}`);
+    }
+  }, [clients, staff, selectedClient]);
   
   if (clients && staff) {
     const targetClients = selectedClient 
@@ -217,6 +272,7 @@ export function StaffClientMatching() {
     });
     
     matches.sort((a, b) => b.score - a.score);
+    console.log(`[MATCHING] Generated ${matches.length} compatibility matches, sorted by score`);
   }
 
   const getScoreColor = (score: number) => {
@@ -235,6 +291,12 @@ export function StaffClientMatching() {
   if (loadingClients || loadingStaff) {
     return (
       <div className="space-y-4">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Loading {loadingClients ? "clients" : ""} {loadingClients && loadingStaff ? "and " : ""} {loadingStaff ? "staff" : ""}...
+          </AlertDescription>
+        </Alert>
         <div className="animate-pulse space-y-4">
           <div className="h-32 bg-muted rounded" />
           <div className="h-32 bg-muted rounded" />
@@ -243,21 +305,100 @@ export function StaffClientMatching() {
     );
   }
 
-  if (!clients?.length || !staff?.length) {
+  if (clientsError || staffError) {
     return (
-      <Alert>
+      <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          {!clients?.length && !staff?.length && "You need to add both clients and staff members with completed DISC assessments to see compatibility matches."}
-          {!clients?.length && staff?.length && "You need to add clients with completed DISC assessments to see compatibility matches."}
-          {clients?.length && !staff?.length && "You need to add staff members with completed DISC assessments to see compatibility matches."}
+          <div className="space-y-2">
+            <p className="font-semibold">Error loading data:</p>
+            {clientsError && <p>Clients: {(clientsError as Error).message}</p>}
+            {staffError && <p>Staff: {(staffError as Error).message}</p>}
+          </div>
         </AlertDescription>
       </Alert>
     );
   }
 
+  if (!clients?.length || !staff?.length) {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {!clients?.length && !staff?.length && "You need to add both clients and staff members with completed DISC assessments to see compatibility matches."}
+            {!clients?.length && staff?.length && "You need to add clients with completed DISC assessments to see compatibility matches."}
+            {clients?.length && !staff?.length && "You need to add staff members with completed DISC assessments to see compatibility matches."}
+          </AlertDescription>
+        </Alert>
+        
+        <Collapsible open={showDebug} onOpenChange={setShowDebug}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full">
+              <Bug className="h-4 w-4 mr-2" />
+              {showDebug ? "Hide" : "Show"} Debug Info
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <Card className="mt-2">
+              <CardHeader>
+                <CardTitle className="text-sm">Debug Logs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xs font-mono space-y-1 max-h-60 overflow-y-auto">
+                  {debugLogs.map((log, i) => (
+                    <div key={i} className="text-muted-foreground">{log}</div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <Collapsible open={showDebug} onOpenChange={setShowDebug}>
+        <CollapsibleTrigger asChild>
+          <Button variant="outline" size="sm">
+            <Bug className="h-4 w-4 mr-2" />
+            {showDebug ? "Hide" : "Show"} Debug Panel
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <Card className="mt-2 mb-4">
+            <CardHeader>
+              <CardTitle className="text-sm">Debug Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Current State:</h4>
+                <div className="text-xs space-y-1">
+                  <p>Clients loaded: {clients?.length || 0}</p>
+                  <p>Staff loaded: {staff?.length || 0}</p>
+                  <p>Matches generated: {matches.length}</p>
+                  <p>Selected client: {selectedClient || "All"}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Debug Logs:</h4>
+                <div className="text-xs font-mono space-y-1 max-h-60 overflow-y-auto bg-muted p-2 rounded">
+                  {debugLogs.length === 0 ? (
+                    <p className="text-muted-foreground">No logs yet...</p>
+                  ) : (
+                    debugLogs.map((log, i) => (
+                      <div key={i} className="text-muted-foreground">{log}</div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </CollapsibleContent>
+      </Collapsible>
+      
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Staff-Client Compatibility</h2>
