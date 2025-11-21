@@ -495,6 +495,38 @@ const Dashboard = () => {
           </Alert>
         )}
 
+        {!isAdmin && clientCount / clientLimit >= 0.8 && clientCount < clientLimit && (
+          <Alert className="mb-6 border-amber-500/50 bg-amber-500/10">
+            <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-500" />
+            <AlertDescription className="text-sm">
+              <span className="font-semibold">Approaching client limit:</span> You're using {clientCount} of {clientLimit} client slots ({Math.round((clientCount / clientLimit) * 100)}%). 
+              {subscription?.pricing_tier === 'free' ? (
+                <>
+                  {' '}<Button 
+                    variant="link" 
+                    size="sm"
+                    onClick={() => setShowUpgradeDialog(true)}
+                    className="px-2 h-auto underline"
+                  >
+                    Upgrade to add more clients
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {' '}<Button 
+                    variant="link" 
+                    size="sm"
+                    onClick={() => navigate('/profile')}
+                    className="px-2 h-auto underline"
+                  >
+                    Add more client slots
+                  </Button>
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
         {subscription?.status === 'incomplete' || subscription?.status === 'past_due' ? (
           <Alert variant="destructive" className="mb-6">
             <AlertTriangle className="h-4 w-4" />
