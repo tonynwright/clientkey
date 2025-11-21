@@ -9,7 +9,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Tag, Percent, DollarSign } from "lucide-react";
+import { Loader2, Tag, Percent, DollarSign, Calendar, Users } from "lucide-react";
+import { z } from "zod";
+
+const couponSchema = z.object({
+  name: z.string()
+    .trim()
+    .min(1, "Coupon name is required")
+    .max(50, "Coupon name must be less than 50 characters")
+    .regex(/^[A-Z0-9_-]+$/, "Only uppercase letters, numbers, hyphens and underscores allowed"),
+  discountType: z.enum(["percent", "amount"]),
+  percentOff: z.string().optional(),
+  amountOff: z.string().optional(),
+  duration: z.enum(["once", "repeating", "forever"]),
+  durationInMonths: z.string().optional(),
+  maxRedemptions: z.string().optional(),
+  expiresAt: z.string().optional(),
+}).refine(
+  (data) => data.percentOff || data.amountOff,
+  { message: "Either percent off or amount off is required" }
+);
 
 export function CouponManagement() {
   const { toast } = useToast();
@@ -21,6 +40,8 @@ export function CouponManagement() {
     amountOff: "",
     duration: "once",
     durationInMonths: "",
+    maxRedemptions: "",
+    expiresAt: "",
   });
 
   const { data: coupons, isLoading } = useQuery({
@@ -53,6 +74,8 @@ export function CouponManagement() {
         amountOff: "",
         duration: "once",
         durationInMonths: "",
+        maxRedemptions: "",
+        expiresAt: "",
       });
     },
     onError: (error: any) => {
@@ -67,17 +90,19 @@ export function CouponManagement() {
   const handleCreateCoupon = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!couponForm.name) {
+    // Validate with zod schema
+    const validationResult = couponSchema.safeParse(couponForm);
+    if (!validationResult.success) {
       toast({
         title: "Validation error",
-        description: "Coupon name is required",
+        description: validationResult.error.errors[0]?.message || "Please check your input",
         variant: "destructive",
       });
       return;
     }
 
     const couponData: any = {
-      name: couponForm.name,
+      name: couponForm.name.toUpperCase().trim(),
       duration: couponForm.duration,
     };
 
@@ -108,15 +133,44 @@ export function CouponManagement() {
 
     if (couponForm.duration === "repeating") {
       const months = parseInt(couponForm.durationInMonths);
-      if (!months || months <= 0) {
+      if (!months || months <= 0 || months > 36) {
         toast({
           title: "Validation error",
-          description: "Duration in months is required for repeating coupons",
+          description: "Duration must be between 1 and 36 months",
           variant: "destructive",
         });
         return;
       }
       couponData.duration_in_months = months;
+    }
+
+    // Add usage limit if provided
+    if (couponForm.maxRedemptions) {
+      const maxRedemptions = parseInt(couponForm.maxRedemptions);
+      if (maxRedemptions <= 0 || maxRedemptions > 10000) {
+        toast({
+          title: "Validation error",
+          description: "Max redemptions must be between 1 and 10,000",
+          variant: "destructive",
+        });
+        return;
+      }
+      couponData.max_redemptions = maxRedemptions;
+    }
+
+    // Add expiration date if provided
+    if (couponForm.expiresAt) {
+      const expiresAt = new Date(couponForm.expiresAt);
+      const now = new Date();
+      if (expiresAt <= now) {
+        toast({
+          title: "Validation error",
+          description: "Expiration date must be in the future",
+          variant: "destructive",
+        });
+        return;
+      }
+      couponData.redeem_by = Math.floor(expiresAt.getTime() / 1000);
     }
 
     createCoupon.mutate(couponData);
@@ -255,16 +309,69 @@ export function CouponManagement() {
                       type="number"
                       placeholder="e.g., 3"
                       min="1"
+                      max="36"
                       value={couponForm.durationInMonths}
                       onChange={(e) =>
                         setCouponForm({ ...couponForm, durationInMonths: e.target.value })
                       }
                       required
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Maximum 36 months
+                    </p>
                   </div>
                 )}
 
-                <Button type="submit" disabled={createCoupon.isPending}>
+                <div className="border-t pt-4 mt-4">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Optional Limits
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="maxRedemptions" className="flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Maximum Redemptions
+                      </Label>
+                      <Input
+                        id="maxRedemptions"
+                        type="number"
+                        placeholder="Unlimited if empty"
+                        min="1"
+                        max="10000"
+                        value={couponForm.maxRedemptions}
+                        onChange={(e) =>
+                          setCouponForm({ ...couponForm, maxRedemptions: e.target.value })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave empty for unlimited uses
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="expiresAt" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Expiration Date
+                      </Label>
+                      <Input
+                        id="expiresAt"
+                        type="datetime-local"
+                        min={new Date().toISOString().slice(0, 16)}
+                        value={couponForm.expiresAt}
+                        onChange={(e) =>
+                          setCouponForm({ ...couponForm, expiresAt: e.target.value })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Leave empty for no expiration
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button type="submit" disabled={createCoupon.isPending} className="w-full">
                   {createCoupon.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -315,11 +422,24 @@ export function CouponManagement() {
                                 <span>({coupon.duration_in_months} months)</span>
                               )}
                             </div>
-                            {coupon.times_redeemed !== undefined && (
-                              <p className="text-xs text-muted-foreground">
-                                Redeemed {coupon.times_redeemed} times
-                              </p>
-                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                              {coupon.times_redeemed !== undefined && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {coupon.times_redeemed}
+                                  {coupon.max_redemptions && ` / ${coupon.max_redemptions}`} uses
+                                </span>
+                              )}
+                              {coupon.redeem_by && (
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  Expires: {new Date(coupon.redeem_by * 1000).toLocaleDateString()}
+                                </span>
+                              )}
+                              {!coupon.max_redemptions && !coupon.redeem_by && (
+                                <span className="text-green-600 dark:text-green-500">No limits</span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </CardContent>
