@@ -112,6 +112,14 @@ serve(async (req) => {
           .maybeSingle();
 
         if (existingSub) {
+          // Count addon packs (price_1SVzWNDdXbYbPM4z2D7jHiJ4)
+          const ADDON_PRICE_ID = "price_1SVzWNDdXbYbPM4z2D7jHiJ4";
+          const addonCount = subscription.items.data.filter(
+            (item: Stripe.SubscriptionItem) => item.price.id === ADDON_PRICE_ID
+          ).reduce((sum: number, item: Stripe.SubscriptionItem) => sum + (item.quantity || 0), 0);
+          
+          console.log(`Found ${addonCount} addon packs in subscription`);
+
           await supabaseClient
             .from("subscriptions")
             .update({
@@ -119,9 +127,10 @@ serve(async (req) => {
               current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
               current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
               cancel_at_period_end: subscription.cancel_at_period_end,
+              addon_client_packs: addonCount,
             })
             .eq("stripe_subscription_id", subscription.id);
-          console.log("Subscription status updated");
+          console.log(`Subscription updated with ${addonCount} addon packs`);
         }
         break;
       }
