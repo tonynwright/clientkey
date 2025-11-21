@@ -8,6 +8,7 @@ import { Users, TrendingUp, AlertCircle, CheckCircle2, Bug, Copy, Download } fro
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
@@ -181,6 +182,7 @@ function calculateCompatibility(client: Client, staff: Staff): CompatibilityScor
 }
 
 export function StaffClientMatching() {
+  const { subscription, isAdmin } = useAuth();
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
@@ -460,6 +462,34 @@ export function StaffClientMatching() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <h4 className="text-sm font-semibold mb-2">Subscription Status:</h4>
+                <div className="text-xs space-y-1 bg-muted/50 p-3 rounded">
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Tier:</span>
+                    <Badge variant={subscription?.pricing_tier === 'free' ? 'secondary' : 'default'} className="text-xs">
+                      {subscription?.pricing_tier === 'free' ? 'Free' : 
+                       subscription?.pricing_tier === 'early_bird' ? 'Early Bird ($19/mo)' : 
+                       subscription?.pricing_tier === 'pro' ? 'Pro ($49/mo)' : 
+                       'Unknown'}
+                    </Badge>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Client Limit:</span>
+                    <span className="font-mono">{isAdmin ? '∞' : subscription?.pricing_tier === 'free' ? '3' : '300'}</span>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Pro Features:</span>
+                    <Badge variant={subscription?.pricing_tier === 'free' && !isAdmin ? 'destructive' : 'default'} className="text-xs">
+                      {subscription?.pricing_tier === 'free' && !isAdmin ? 'Locked' : 'Accessible'}
+                    </Badge>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="text-muted-foreground">Admin:</span>
+                    <span className="font-mono">{isAdmin ? 'Yes' : 'No'}</span>
+                  </p>
+                </div>
+              </div>
               <div>
                 <h4 className="text-sm font-semibold mb-2">Current State:</h4>
                 <div className="text-xs space-y-1">
