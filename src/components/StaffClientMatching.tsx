@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { CompatibilityHeatmap } from "./CompatibilityHeatmap";
 import type { Database } from "@/integrations/supabase/types";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
@@ -428,6 +429,14 @@ export function StaffClientMatching() {
 
   return (
     <div className="space-y-6">
+      {clients && staff && clients.length > 0 && staff.length > 0 && (
+        <CompatibilityHeatmap 
+          clients={clients}
+          staff={staff}
+          compatibilityMatrix={discCompatibilityMatrix}
+        />
+      )}
+      
       <Collapsible open={showDebug} onOpenChange={setShowDebug}>
         <CollapsibleTrigger asChild>
           <Button variant="outline" size="sm">
