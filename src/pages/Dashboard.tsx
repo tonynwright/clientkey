@@ -24,6 +24,7 @@ import { CommunicationPlaybook } from "@/components/CommunicationPlaybook";
 import { ClientProfilePDF } from "@/components/ClientProfilePDF";
 import { ClientComparison } from "@/components/ClientComparison";
 import { UpgradeDialog } from "@/components/UpgradeDialog";
+import { OnboardingSequences } from "@/components/OnboardingSequences";
 
 import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
@@ -745,6 +746,7 @@ const Dashboard = () => {
             <div className="max-w-6xl mx-auto space-y-6">
               <EmailTemplates onUpgrade={() => setShowUpgradeDialog(true)} />
               <ReminderSettings />
+              <OnboardingSequences />
             </div>
           </TabsContent>
 
