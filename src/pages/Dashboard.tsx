@@ -30,6 +30,7 @@ import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
 import { SeedingProgressDialog } from "@/components/SeedingProgressDialog";
 import { CouponManagement } from "@/components/CouponManagement";
+import { BulkInsights } from "@/components/BulkInsights";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -590,6 +591,17 @@ const Dashboard = () => {
                 <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger 
+              value="bulk-insights" 
+              className="gap-2"
+              disabled={subscription?.pricing_tier === 'free' && !isAdmin}
+            >
+              <Target className="h-4 w-4" />
+              Bulk Insights
+              {subscription?.pricing_tier === 'free' && !isAdmin && (
+                <Badge variant="secondary" className="ml-1 text-xs">Pro</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="settings" className="gap-2">
               <Settings className="h-4 w-4" />
               Settings
@@ -790,6 +802,10 @@ const Dashboard = () => {
                 <EmailAnalytics />
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="bulk-insights">
+            <BulkInsights />
           </TabsContent>
 
           <TabsContent value="settings">
