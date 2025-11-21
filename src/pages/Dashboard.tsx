@@ -32,6 +32,7 @@ import { Onboarding } from "@/components/Onboarding";
 import { SeedingProgressDialog } from "@/components/SeedingProgressDialog";
 import { CouponManagement } from "@/components/CouponManagement";
 import { BulkInsights } from "@/components/BulkInsights";
+import { ComprehensiveTutorial } from "@/components/ComprehensiveTutorial";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -143,14 +144,34 @@ const Dashboard = () => {
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [seedingProgress, setSeedingProgress] = useState(false);
+  const [showComprehensiveTutorial, setShowComprehensiveTutorial] = useState(false);
 
-  // Check if user is new (no clients) and hasn't seen onboarding
+  // Check if user is new and hasn't seen tutorial
   useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
-    if (!hasSeenOnboarding && clientCount === 0) {
-      setShowOnboarding(true);
+    const hasSeenTutorial = localStorage.getItem('hasSeenComprehensiveTutorial');
+    if (!hasSeenTutorial && clientCount === 0 && !isDemoAccount) {
+      setShowComprehensiveTutorial(true);
     }
-  }, [clientCount]);
+  }, [clientCount, isDemoAccount]);
+
+  const handleTutorialComplete = () => {
+    localStorage.setItem('hasSeenComprehensiveTutorial', 'true');
+    setShowComprehensiveTutorial(false);
+    toast({
+      title: "Tutorial completed!",
+      description: "You're ready to start using ClientKey. Let's add your first client!",
+    });
+    setActiveTab("add-client");
+  };
+
+  const handleTutorialSkip = () => {
+    localStorage.setItem('hasSeenComprehensiveTutorial', 'true');
+    setShowComprehensiveTutorial(false);
+    toast({
+      title: "Tutorial skipped",
+      description: "You can restart the tutorial anytime from Settings.",
+    });
+  };
 
   const handleOnboardingComplete = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
@@ -202,6 +223,11 @@ const Dashboard = () => {
   const handleRestartOnboarding = () => {
     localStorage.removeItem('hasSeenOnboarding');
     setShowOnboarding(true);
+  };
+
+  const handleRestartTutorial = () => {
+    localStorage.removeItem('hasSeenComprehensiveTutorial');
+    setShowComprehensiveTutorial(true);
   };
 
   const handleResetDemoData = async () => {
@@ -867,7 +893,7 @@ const Dashboard = () => {
                     </Button>
                   </div>
                   
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-2 pb-4 border-b">
                     <div className="space-y-1">
                       <h3 className="text-lg font-semibold text-foreground">Getting Started Tour</h3>
                       <p className="text-sm text-muted-foreground">
@@ -877,6 +903,19 @@ const Dashboard = () => {
                     <Button onClick={handleRestartOnboarding} variant="outline">
                       <Sparkles className="h-4 w-4 mr-2" />
                       Restart Tour
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between pt-4">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-foreground">Feature Tutorial</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Take a comprehensive guided tour through all ClientKey features
+                      </p>
+                    </div>
+                    <Button onClick={handleRestartTutorial} variant="outline">
+                      <Target className="h-4 w-4 mr-2" />
+                      Start Tutorial
                     </Button>
                   </div>
                 </div>
@@ -940,6 +979,12 @@ const Dashboard = () => {
         open={showUpgradeDialog}
         onOpenChange={setShowUpgradeDialog}
         currentTier={subscription?.pricing_tier || 'free'}
+      />
+
+      <ComprehensiveTutorial
+        open={showComprehensiveTutorial}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialSkip}
       />
 
       <Onboarding
