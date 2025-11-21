@@ -94,15 +94,18 @@ export function UpgradeDialog({ open, onOpenChange, currentTier }: UpgradeDialog
                   (then $49/mo)
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                10 clients included + $10/mo per 5 additional clients
+              </p>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span className="text-sm font-semibold">Up to 300 clients</span>
+                <span className="text-sm font-semibold">10 clients included (add more anytime)</span>
               </div>
               <div className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                <span className="text-sm font-semibold">Up to 300 staff members</span>
+                <span className="text-sm font-semibold">Unlimited staff members</span>
               </div>
               <div className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />

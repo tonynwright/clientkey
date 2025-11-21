@@ -52,8 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setSubscription(data);
 
-    // Get client limit (admins get unlimited)
-    const limit = adminStatus ? 999999 : (data?.pricing_tier === "free" ? 3 : 300);
+    // Get client limit (admins get unlimited, free = 3, paid = 10 + addons)
+    let limit = 3;
+    if (adminStatus) {
+      limit = 999999;
+    } else if (data?.pricing_tier === "free") {
+      limit = 3;
+    } else if (data?.pricing_tier === "early_bird" || data?.pricing_tier === "regular") {
+      const addonPacks = data?.addon_client_packs || 0;
+      limit = 10 + (addonPacks * 5);
+    }
     setClientLimit(limit);
 
     // Get current client count
