@@ -29,6 +29,7 @@ import { AdminSetup } from "@/components/AdminSetup";
 import { ClientInsights } from "@/components/ClientInsights";
 import { Onboarding } from "@/components/Onboarding";
 import { SeedingProgressDialog } from "@/components/SeedingProgressDialog";
+import { CouponManagement } from "@/components/CouponManagement";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 
@@ -862,6 +863,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </Card>
+              {isAdmin && <CouponManagement />}
               {!isAdmin && <AdminSetup />}
             </div>
           </TabsContent>

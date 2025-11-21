@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -20,12 +22,15 @@ interface UpgradeDialogProps {
 
 export function UpgradeDialog({ open, onOpenChange, currentTier }: UpgradeDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
   const { toast } = useToast();
 
   const handleUpgrade = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-checkout");
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: couponCode ? { coupon: couponCode } : {},
+      });
 
       if (error) throw error;
 
@@ -127,8 +132,20 @@ export function UpgradeDialog({ open, onOpenChange, currentTier }: UpgradeDialog
                 <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                 <span className="text-sm">Priority support</span>
               </div>
+              
+              <div className="space-y-3 mt-4 pt-4 border-t">
+                <Label htmlFor="coupon" className="text-sm">Have a coupon code?</Label>
+                <Input
+                  id="coupon"
+                  placeholder="Enter code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="text-center font-mono"
+                />
+              </div>
+              
               <Button 
-                className="w-full mt-4" 
+                className="w-full mt-2" 
                 size="lg"
                 onClick={handleUpgrade}
                 disabled={loading}

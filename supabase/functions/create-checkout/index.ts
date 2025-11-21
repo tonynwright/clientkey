@@ -34,6 +34,10 @@ serve(async (req) => {
 
     console.log(`Creating checkout for user: ${user.id}`);
 
+    // Get coupon code from request body if provided
+    const body = await req.json().catch(() => ({}));
+    const couponCode = body.coupon;
+
     // Check early bird counter
     const { data: counter } = await supabaseClient
       .from("signup_counter")
@@ -59,7 +63,7 @@ serve(async (req) => {
     }
 
     // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -75,7 +79,15 @@ serve(async (req) => {
         user_id: user.id,
         pricing_tier: tier,
       },
-    });
+    };
+
+    // Add coupon if provided
+    if (couponCode) {
+      console.log(`Applying coupon: ${couponCode}`);
+      sessionConfig.discounts = [{ coupon: couponCode }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log(`Checkout session created: ${session.id}`);
 
