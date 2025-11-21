@@ -79,6 +79,18 @@ serve(async (req) => {
         user_id: user.id,
         pricing_tier: tier,
       },
+      subscription_data: isEarlyBird ? {
+        metadata: {
+          user_id: user.id,
+          pricing_tier: tier,
+          early_bird_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+      } : {
+        metadata: {
+          user_id: user.id,
+          pricing_tier: tier,
+        },
+      },
     };
 
     // Add coupon if provided
@@ -90,6 +102,26 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log(`Checkout session created: ${session.id}`);
+
+    // For early bird customers, create a subscription schedule to switch to regular price after 1 year
+    if (isEarlyBird && session.subscription) {
+      const oneYearFromNow = Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60);
+      
+      await stripe.subscriptionSchedules.create({
+        from_subscription: session.subscription as string,
+        phases: [
+          {
+            items: [{ price: EARLY_BIRD_PRICE, quantity: 1 }],
+            end_date: oneYearFromNow,
+          },
+          {
+            items: [{ price: REGULAR_PRICE, quantity: 1 }],
+          },
+        ],
+      });
+      
+      console.log(`Subscription schedule created for early bird customer, will switch to regular price after 1 year`);
+    }
 
     return new Response(
       JSON.stringify({ url: session.url, tier }),
