@@ -27,8 +27,9 @@ export default function Pricing() {
       { name: "Bulk operations", included: false },
     ],
     paid: [
-      { name: "Up to 300 clients", included: true },
-      { name: "Up to 300 staff members", included: true },
+      { name: "10 clients included", included: true },
+      { name: "Add 5 clients for $10/mo each", included: true },
+      { name: "Unlimited staff members", included: true },
       { name: "Unlimited DISC assessments", included: true },
       { name: "Communication playbooks", included: true },
       { name: "Client dashboard", included: true },

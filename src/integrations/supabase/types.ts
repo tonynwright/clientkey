@@ -322,6 +322,7 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          addon_client_packs: number
           cancel_at_period_end: boolean | null
           created_at: string
           current_period_end: string | null
@@ -336,6 +337,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          addon_client_packs?: number
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          addon_client_packs?: number
           cancel_at_period_end?: boolean | null
           created_at?: string
           current_period_end?: string | null

@@ -153,11 +153,39 @@ export default function Profile() {
     }
   };
 
+  const handlePurchaseAddon = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('purchase-addon');
+      
+      if (error) throw error;
+      
+      await refreshSubscription();
+      
+      toast({
+        title: "Success!",
+        description: data.message || "5 additional client slots added to your account",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to purchase add-on",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user) return null;
 
   const tierName = isAdmin ? "Admin" : subscription?.pricing_tier === 'free' ? 'Free' : subscription?.pricing_tier === 'early_bird' ? 'Early Bird' : 'Regular';
   const tierPrice = isAdmin ? "Unlimited" : subscription?.pricing_tier === 'free' ? '$0' : subscription?.pricing_tier === 'early_bird' ? '$19' : '$49';
   const isFree = subscription?.pricing_tier === 'free' && !isAdmin;
+  const isPaid = !isFree && !isAdmin;
+  const addonPacks = subscription?.addon_client_packs || 0;
+  const baseLimit = isPaid ? 10 : isFree ? 3 : 999999;
+  const addonLimit = addonPacks * 5;
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -254,10 +282,18 @@ export default function Profile() {
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Monthly Price</p>
                   <p className="text-3xl font-bold">{tierPrice}<span className="text-base font-normal text-muted-foreground">/month</span></p>
+                  {isPaid && addonPacks > 0 && (
+                    <p className="text-sm text-muted-foreground">+ ${addonPacks * 10}/mo for add-ons</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">Client Usage</p>
                   <p className="text-3xl font-bold">{clientCount}<span className="text-base font-normal text-muted-foreground">/{isAdmin ? '∞' : clientLimit}</span></p>
+                  {isPaid && (
+                    <p className="text-sm text-muted-foreground">
+                      {baseLimit} base + {addonLimit} add-on slots
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -268,7 +304,7 @@ export default function Profile() {
                 <div className="grid gap-2">
                   <div className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-primary" />
-                    <span className="text-sm">{isAdmin ? 'Unlimited' : isFree ? 'Up to 3' : 'Up to 300'} client profiles</span>
+                    <span className="text-sm">{isAdmin ? 'Unlimited' : isFree ? 'Up to 3' : `${clientLimit} (${baseLimit} base + ${addonLimit} add-on)`} client profiles</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Check className="h-5 w-5 text-primary" />
@@ -325,15 +361,25 @@ export default function Profile() {
                     <Zap className="h-4 w-4 mr-2" />
                     Upgrade to Pro - {subscription?.pricing_tier === 'early_bird' ? '$19' : '$49'}/month
                   </Button>
-                ) : !isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    onClick={handleManageSubscription}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Manage Subscription in Stripe
-                  </Button>
-                )}
+                ) : isPaid ? (
+                  <>
+                    <Button 
+                      onClick={handlePurchaseAddon}
+                      disabled={loading}
+                      className="gradient-primary"
+                    >
+                      <Users className="h-4 w-4 mr-2" />
+                      Add 5 Clients for $10/mo
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleManageSubscription}
+                    >
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Manage Subscription
+                    </Button>
+                  </>
+                ) : null}
               </div>
             </CardContent>
           </Card>
