@@ -44,14 +44,35 @@ serve(async (req) => {
     console.log(`Admin user ${user.id} creating coupon`);
 
     const body = await req.json();
-    const { name, percent_off, amount_off, currency, duration, duration_in_months } = body;
+    const { name, percent_off, amount_off, currency, duration, duration_in_months, max_redemptions, redeem_by } = body;
 
-    if (!name) {
-      throw new Error("Coupon name is required");
+    // Input validation
+    if (!name || typeof name !== "string" || name.length > 50) {
+      throw new Error("Invalid coupon name");
     }
 
     if (!percent_off && !amount_off) {
       throw new Error("Either percent_off or amount_off must be provided");
+    }
+
+    if (percent_off && (percent_off <= 0 || percent_off > 100)) {
+      throw new Error("Percent off must be between 0 and 100");
+    }
+
+    if (amount_off && amount_off <= 0) {
+      throw new Error("Amount off must be greater than 0");
+    }
+
+    if (max_redemptions && (max_redemptions <= 0 || max_redemptions > 10000)) {
+      throw new Error("Max redemptions must be between 1 and 10,000");
+    }
+
+    if (redeem_by) {
+      const expirationDate = new Date(redeem_by * 1000);
+      const now = new Date();
+      if (expirationDate <= now) {
+        throw new Error("Expiration date must be in the future");
+      }
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -59,7 +80,7 @@ serve(async (req) => {
     });
 
     const couponData: Stripe.CouponCreateParams = {
-      name,
+      name: name.toUpperCase().trim(),
       duration: duration || "once",
     };
 
@@ -71,7 +92,20 @@ serve(async (req) => {
     }
 
     if (duration === "repeating" && duration_in_months) {
+      if (duration_in_months <= 0 || duration_in_months > 36) {
+        throw new Error("Duration must be between 1 and 36 months");
+      }
       couponData.duration_in_months = duration_in_months;
+    }
+
+    // Add usage limit if provided
+    if (max_redemptions) {
+      couponData.max_redemptions = max_redemptions;
+    }
+
+    // Add expiration date if provided
+    if (redeem_by) {
+      couponData.redeem_by = redeem_by;
     }
 
     const coupon = await stripe.coupons.create(couponData);
