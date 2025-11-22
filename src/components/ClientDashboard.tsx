@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -68,6 +69,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [sortBy, setSortBy] = useState<'name' | 'company' | 'created_at'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -274,21 +276,31 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     }
   };
 
-  const sortedClients = clients ? [...clients].sort((a, b) => {
-    let compareValue = 0;
-    
-    if (sortBy === 'name') {
-      compareValue = a.name.localeCompare(b.name);
-    } else if (sortBy === 'company') {
-      const companyA = a.company || '';
-      const companyB = b.company || '';
-      compareValue = companyA.localeCompare(companyB);
-    } else {
-      compareValue = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    }
-    
-    return sortOrder === 'asc' ? compareValue : -compareValue;
-  }) : [];
+  const sortedClients = clients ? [...clients]
+    .filter((client) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        client.name.toLowerCase().includes(query) ||
+        client.email.toLowerCase().includes(query) ||
+        (client.company && client.company.toLowerCase().includes(query))
+      );
+    })
+    .sort((a, b) => {
+      let compareValue = 0;
+      
+      if (sortBy === 'name') {
+        compareValue = a.name.localeCompare(b.name);
+      } else if (sortBy === 'company') {
+        const companyA = a.company || '';
+        const companyB = b.company || '';
+        compareValue = companyA.localeCompare(companyB);
+      } else {
+        compareValue = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    }) : [];
 
   const stats = {
     total: clients?.length || 0,
@@ -392,9 +404,19 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
       </div>
 
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
           <h2 className="text-xl font-semibold text-foreground">All Clients</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-[300px] max-w-2xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder="Search by name, email, or company..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Sort by..." />
