@@ -523,6 +523,33 @@ export type Database = {
         }
         Relationships: []
       }
+      tag_presets: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          tags: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          tags?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          tags?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

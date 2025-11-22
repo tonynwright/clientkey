@@ -15,6 +15,7 @@ import { ReminderSettings } from "./ReminderSettings";
 import { EmailTemplates } from "./EmailTemplates";
 import { DISCShape } from "./DISCShape";
 import { ClientTagInput } from "./ClientTagInput";
+import { TagPresetsManagement } from "./TagPresetsManagement";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1144,36 +1145,43 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
       </Dialog>
 
       <Dialog open={showBulkTagDialog} onOpenChange={setShowBulkTagDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Bulk Tag Operations</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Operation</label>
-              <Select value={bulkTagOperation} onValueChange={(value: 'add' | 'remove') => setBulkTagOperation(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="add">Add Tags</SelectItem>
-                  <SelectItem value="remove">Remove Tags</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-6 py-4">
+            <TagPresetsManagement 
+              onSelectPreset={setBulkTags} 
+              showQuickSelect 
+            />
+            
+            <div className="border-t border-border pt-4 space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Operation</label>
+                <Select value={bulkTagOperation} onValueChange={(value: 'add' | 'remove') => setBulkTagOperation(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="add">Add Tags</SelectItem>
+                    <SelectItem value="remove">Remove Tags</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  {bulkTagOperation === 'add' ? 'Tags to Add' : 'Tags to Remove'}
+                </label>
+                <ClientTagInput
+                  tags={bulkTags}
+                  onTagsChange={setBulkTags}
+                  placeholder={bulkTagOperation === 'add' ? "Type and press Enter to add..." : "Type and press Enter to remove..."}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                This will {bulkTagOperation} tags {bulkTagOperation === 'add' ? 'to' : 'from'} {selectedClients.size} selected client(s)
+              </p>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">
-                {bulkTagOperation === 'add' ? 'Tags to Add' : 'Tags to Remove'}
-              </label>
-              <ClientTagInput
-                tags={bulkTags}
-                onTagsChange={setBulkTags}
-                placeholder={bulkTagOperation === 'add' ? "Type and press Enter to add..." : "Type and press Enter to remove..."}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              This will {bulkTagOperation} tags {bulkTagOperation === 'add' ? 'to' : 'from'} {selectedClients.size} selected client(s)
-            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => {
