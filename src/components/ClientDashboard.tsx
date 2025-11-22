@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -72,6 +72,11 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
+  const [discTypeFilter, setDiscTypeFilter] = useState<'all' | 'D' | 'I' | 'S' | 'C'>('all');
+  const [completionFilter, setCompletionFilter] = useState<'all' | 'completed' | 'pending'>('all');
+  const [dateRangeStart, setDateRangeStart] = useState<string>('');
+  const [dateRangeEnd, setDateRangeEnd] = useState<string>('');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -447,13 +452,42 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
 
   const sortedClients = clients ? [...clients]
     .filter((client) => {
-      if (!searchQuery) return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        client.name.toLowerCase().includes(query) ||
-        client.email.toLowerCase().includes(query) ||
-        (client.company && client.company.toLowerCase().includes(query))
-      );
+      // Search filter
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesSearch = 
+          client.name.toLowerCase().includes(query) ||
+          client.email.toLowerCase().includes(query) ||
+          (client.company && client.company.toLowerCase().includes(query));
+        if (!matchesSearch) return false;
+      }
+
+      // DISC type filter
+      if (discTypeFilter !== 'all') {
+        if (client.disc_type !== discTypeFilter) return false;
+      }
+
+      // Completion status filter
+      if (completionFilter !== 'all') {
+        const hasCompleted = !!client.disc_type;
+        if (completionFilter === 'completed' && !hasCompleted) return false;
+        if (completionFilter === 'pending' && hasCompleted) return false;
+      }
+
+      // Date range filter
+      if (dateRangeStart) {
+        const clientDate = new Date(client.created_at);
+        const startDate = new Date(dateRangeStart);
+        if (clientDate < startDate) return false;
+      }
+      if (dateRangeEnd) {
+        const clientDate = new Date(client.created_at);
+        const endDate = new Date(dateRangeEnd);
+        endDate.setHours(23, 59, 59, 999); // Include the entire end date
+        if (clientDate > endDate) return false;
+      }
+
+      return true;
     })
     .sort((a, b) => {
       let compareValue = 0;
@@ -589,8 +623,21 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2 flex-1 min-w-[300px] max-w-2xl">
-            <div className="relative flex-1">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4 mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[300px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
@@ -619,6 +666,82 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               <ArrowUpDown className="h-4 w-4" />
             </Button>
           </div>
+
+          {showAdvancedFilters && (
+            <Card className="p-4 border border-border bg-muted/30">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">DISC Type</label>
+                  <Select value={discTypeFilter} onValueChange={(value: any) => setDiscTypeFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="D">Dominance (D)</SelectItem>
+                      <SelectItem value="I">Influence (I)</SelectItem>
+                      <SelectItem value="S">Steadiness (S)</SelectItem>
+                      <SelectItem value="C">Conscientiousness (C)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Status</label>
+                  <Select value={completionFilter} onValueChange={(value: any) => setCompletionFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="pending">Pending Assessment</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">From Date</label>
+                  <Input
+                    type="date"
+                    value={dateRangeStart}
+                    onChange={(e) => setDateRangeStart(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">To Date</label>
+                  <Input
+                    type="date"
+                    value={dateRangeEnd}
+                    onChange={(e) => setDateRangeEnd(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+
+              {(discTypeFilter !== 'all' || completionFilter !== 'all' || dateRangeStart || dateRangeEnd) && (
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    {sortedClients.length} client(s) match your filters
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDiscTypeFilter('all');
+                      setCompletionFilter('all');
+                      setDateRangeStart('');
+                      setDateRangeEnd('');
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
         
         {selectedClients.size > 0 && (
