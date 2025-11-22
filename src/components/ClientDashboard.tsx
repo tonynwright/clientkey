@@ -16,6 +16,7 @@ import { EmailTemplates } from "./EmailTemplates";
 import { DISCShape } from "./DISCShape";
 import { ClientTagInput } from "./ClientTagInput";
 import { TagPresetsManagement } from "./TagPresetsManagement";
+import { TagAnalytics } from "./TagAnalytics";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,6 +93,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [showBulkTagDialog, setShowBulkTagDialog] = useState(false);
   const [bulkTagOperation, setBulkTagOperation] = useState<'add' | 'remove'>('add');
   const [bulkTags, setBulkTags] = useState<string[]>([]);
+  const [showTagAnalytics, setShowTagAnalytics] = useState(false);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -750,8 +752,22 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               <Filter className="h-4 w-4 mr-2" />
               Filters
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowTagAnalytics(!showTagAnalytics)}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Tag Analytics
+            </Button>
           </div>
         </div>
+
+        {showTagAnalytics && (
+          <div className="mb-6 animate-fade-up">
+            <TagAnalytics />
+          </div>
+        )}
 
         <div className="space-y-4 mb-4">
           <div className="flex items-center gap-2 flex-wrap">
