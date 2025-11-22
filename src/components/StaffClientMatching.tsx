@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompatibilityHeatmap } from "./CompatibilityHeatmap";
 import type { Database } from "@/integrations/supabase/types";
+import { analytics } from "@/lib/analytics";
 
 type DISCScores = { D: number; I: number; S: number; C: number };
 
@@ -187,6 +188,11 @@ export function StaffClientMatching() {
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [showDebug, setShowDebug] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  
+  // Track usage on mount
+  useEffect(() => {
+    analytics.staffMatchingUsed();
+  }, []);
   
   const addDebugLog = (message: string) => {
     console.log(message);

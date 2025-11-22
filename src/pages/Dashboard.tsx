@@ -35,6 +35,7 @@ import { BulkInsights } from "@/components/BulkInsights";
 import { ComprehensiveTutorial } from "@/components/ComprehensiveTutorial";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
+import { analytics } from "@/lib/analytics";
 
 const clientSchema = z.object({
   name: z
@@ -215,6 +216,8 @@ const Dashboard = () => {
         title: "Demo data created!",
         description: data.message || "Successfully created demo clients and staff members.",
       });
+      
+      analytics.demoDataSeeded();
 
       setShowOnboarding(false);
       setActiveTab("matching");
@@ -300,6 +303,7 @@ const Dashboard = () => {
         title: "Client created",
         description: "Now complete their DISC assessment",
       });
+      analytics.clientAdded('manual');
       setCurrentClientId(data.id);
       setShowAssessment(true);
       setClientForm({ name: "", email: "", company: "" });

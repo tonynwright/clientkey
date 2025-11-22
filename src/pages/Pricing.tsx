@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, X, Users, Target, TrendingUp, Brain, Mail, FileText, Zap, Crown, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { analytics } from "@/lib/analytics";
 
 export default function Pricing() {
   const navigate = useNavigate();
@@ -425,7 +426,10 @@ export default function Pricing() {
             </p>
             <Button 
               size="lg"
-              onClick={() => navigate(user ? '/dashboard' : '/auth')}
+              onClick={() => {
+                analytics.upgradeClicked('free', 'pricing_page_templates');
+                navigate(user ? '/dashboard' : '/auth');
+              }}
             >
               <Sparkles className="h-5 w-5 mr-2" />
               Upgrade to Pro - Unlock Custom Templates
@@ -518,7 +522,10 @@ export default function Pricing() {
               <Button 
                 size="lg" 
                 className="text-lg px-12 py-6"
-                onClick={() => navigate(user ? '/dashboard' : '/auth')}
+                onClick={() => {
+                  analytics.upgradeClicked('free', 'pricing_page_cta');
+                  navigate(user ? '/dashboard' : '/auth');
+                }}
               >
                 <Zap className="h-5 w-5 mr-2" />
                 Get Started - $19/month

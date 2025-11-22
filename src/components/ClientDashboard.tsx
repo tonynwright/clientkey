@@ -18,6 +18,7 @@ import { ClientTagInput } from "./ClientTagInput";
 import { TagPresetsManagement } from "./TagPresetsManagement";
 import { TagAnalytics } from "./TagAnalytics";
 import { TagGroupedView } from "./TagGroupedView";
+import { analytics } from "@/lib/analytics";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -232,6 +233,8 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         title: "Client deleted",
         description: "Client has been removed from your dashboard",
       });
+      
+      analytics.clientDeleted();
 
       queryClient.invalidateQueries({ queryKey: ["clients"] });
     } catch (error) {
@@ -270,6 +273,8 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         title: "Clients deleted",
         description: `${selectedClients.size} client(s) have been removed`,
       });
+      
+      analytics.clientDeleted();
 
       setSelectedClients(new Set());
       queryClient.invalidateQueries({ queryKey: ["clients"] });
@@ -330,6 +335,8 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         title: "Invitations sent",
         description: `Successfully sent ${successCount} invitation(s)${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
       });
+      
+      analytics.assessmentInviteSent(successCount);
 
       setSelectedClients(new Set());
     } catch (error) {
@@ -462,6 +469,8 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         title: "PDF exported",
         description: "Client profile downloaded successfully",
       });
+      
+      analytics.pdfExported('profile');
     } catch (error) {
       toast({
         title: "Export failed",

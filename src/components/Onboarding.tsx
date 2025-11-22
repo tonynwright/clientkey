@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Users, Target, Mail, ArrowRight, ArrowLeft, Sparkles, Zap } from "lucide-react";
+import { analytics } from "@/lib/analytics";
 
 interface OnboardingProps {
   open: boolean;
@@ -52,10 +53,12 @@ export function Onboarding({ open, onComplete, onCreateClient, onTryDemo, onSkip
   useEffect(() => {
     if (open) {
       setStep(0);
+      analytics.onboardingStarted();
     }
   }, [open]);
 
   const handleSkip = () => {
+    analytics.onboardingSkipped(step);
     if (onSkip) {
       onSkip();
     } else {
@@ -76,11 +79,13 @@ export function Onboarding({ open, onComplete, onCreateClient, onTryDemo, onSkip
   };
 
   const handleCreateClientClick = () => {
+    analytics.onboardingCompleted();
     onComplete();
     onCreateClient();
   };
 
   const handleTryDemoClick = () => {
+    analytics.demoAccountAccessed();
     onComplete();
     onTryDemo();
   };
