@@ -1,8 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -11,6 +12,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ReminderSettings } from "./ReminderSettings";
 import { EmailTemplates } from "./EmailTemplates";
 import { DISCShape } from "./DISCShape";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Client {
   id: string;
@@ -43,8 +61,13 @@ const DISC_COLORS = {
 
 export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { isDemoAccount, subscription, isAdmin } = useAuth();
   const isPaidUser = subscription?.pricing_tier !== 'free' || isAdmin;
+  
+  const [sortBy, setSortBy] = useState<'name' | 'company' | 'created_at'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -156,6 +179,45 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     }
   };
 
+  const handleDeleteClient = async () => {
+    if (!deleteClientId) return;
+    
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to delete clients",
+        variant: "destructive",
+      });
+      setDeleteClientId(null);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .delete()
+        .eq("id", deleteClientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Client deleted",
+        description: "Client has been removed from your dashboard",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    } catch (error) {
+      console.error("Error deleting client:", error);
+      toast({
+        title: "Failed to delete client",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteClientId(null);
+    }
+  };
+
   const handleExportPDF = async (client: Client) => {
     // Check if user is paid
     if (!isPaidUser) {
@@ -211,6 +273,22 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
       });
     }
   };
+
+  const sortedClients = clients ? [...clients].sort((a, b) => {
+    let compareValue = 0;
+    
+    if (sortBy === 'name') {
+      compareValue = a.name.localeCompare(b.name);
+    } else if (sortBy === 'company') {
+      const companyA = a.company || '';
+      const companyB = b.company || '';
+      compareValue = companyA.localeCompare(companyB);
+    } else {
+      compareValue = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    }
+    
+    return sortOrder === 'asc' ? compareValue : -compareValue;
+  }) : [];
 
   const stats = {
     total: clients?.length || 0,
@@ -314,10 +392,32 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
       </div>
 
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4">All Clients</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-foreground">All Clients</h2>
+          <div className="flex items-center gap-2">
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Date Added</SelectItem>
+                <SelectItem value="name">Client Name</SelectItem>
+                <SelectItem value="company">Company</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              title={sortOrder === 'asc' ? 'Sort descending' : 'Sort ascending'}
+            >
+              <ArrowUpDown className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
         {clients && clients.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {clients.map((client) => (
+            {sortedClients.map((client) => (
               <Card
                 key={client.id}
                 className="border border-border bg-card p-5 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
@@ -428,6 +528,18 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                         {!isPaidUser && <Zap className="h-3 w-3 ml-1 text-primary" />}
                       </Button>
                     )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteClientId(client.id);
+                      }}
+                      title="Delete client"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </Card>
@@ -441,6 +553,23 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
           </Card>
         )}
       </div>
+
+      <AlertDialog open={!!deleteClientId} onOpenChange={() => setDeleteClientId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Client</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this client? This action cannot be undone and will remove all associated data including assessments and insights.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteClient} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
