@@ -330,6 +330,13 @@ export const ComprehensiveTutorial = ({ open, onComplete, onSkip }: Comprehensiv
 
           <div className="flex items-center justify-between pt-4">
             <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                onClick={onSkip}
+                className="text-muted-foreground"
+              >
+                Skip Tutorial
+              </Button>
               {!isFirstStep && (
                 <Button
                   variant="outline"
@@ -337,14 +344,6 @@ export const ComprehensiveTutorial = ({ open, onComplete, onSkip }: Comprehensiv
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Previous
-                </Button>
-              )}
-              {isFirstStep && (
-                <Button
-                  variant="ghost"
-                  onClick={onSkip}
-                >
-                  Skip Tutorial
                 </Button>
               )}
             </div>

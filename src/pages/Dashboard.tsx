@@ -154,6 +154,18 @@ const Dashboard = () => {
     }
   }, [clientCount, isDemoAccount]);
 
+  // Auto-hide tutorial after first client is added
+  useEffect(() => {
+    if (clientCount > 0 && showComprehensiveTutorial) {
+      localStorage.setItem('hasSeenComprehensiveTutorial', 'true');
+      setShowComprehensiveTutorial(false);
+      toast({
+        title: "Great job!",
+        description: "You've added your first client. The tutorial has been completed.",
+      });
+    }
+  }, [clientCount, showComprehensiveTutorial, toast]);
+
   const handleTutorialComplete = () => {
     localStorage.setItem('hasSeenComprehensiveTutorial', 'true');
     setShowComprehensiveTutorial(false);
