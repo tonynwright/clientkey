@@ -135,8 +135,28 @@ export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
           <CardTitle>Email Templates</CardTitle>
         </div>
         <CardDescription>
-          Customize your email invitation and reminder templates. Use variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
+          Customize your email invitation and reminder templates with your branding. Dynamic content like client names and assessment links are automatically inserted when emails are sent.
         </CardDescription>
+        {isPaidUser && (
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2">
+            <Badge variant="outline" className="justify-start gap-2">
+              <span className="text-xs">👤</span>
+              <span className="text-xs">Client Name</span>
+            </Badge>
+            <Badge variant="outline" className="justify-start gap-2">
+              <span className="text-xs">🔗</span>
+              <span className="text-xs">Assessment Link</span>
+            </Badge>
+            <Badge variant="outline" className="justify-start gap-2">
+              <span className="text-xs">🎨</span>
+              <span className="text-xs">Brand Color</span>
+            </Badge>
+            <Badge variant="outline" className="justify-start gap-2">
+              <span className="text-xs">💳</span>
+              <span className="text-xs">Billing Portal</span>
+            </Badge>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="invitation" className="w-full">
@@ -319,9 +339,15 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
                 className="min-h-[300px] font-mono text-sm"
                 disabled={!isPaidUser}
               />
-              <p className="text-xs text-muted-foreground">
-                Available variables: {'{{CLIENT_NAME}}'}, {'{{ASSESSMENT_LINK}}'}, {'{{PRIMARY_COLOR}}'}, {'{{BILLING_PORTAL_LINK}}'}
-              </p>
+              <div className="bg-muted/50 rounded-md p-3 space-y-2">
+                <p className="text-xs font-medium text-foreground">Available Dynamic Variables:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <code className="text-xs bg-background px-2 py-1 rounded">{'{{CLIENT_NAME}}'}</code>
+                  <code className="text-xs bg-background px-2 py-1 rounded">{'{{ASSESSMENT_LINK}}'}</code>
+                  <code className="text-xs bg-background px-2 py-1 rounded">{'{{PRIMARY_COLOR}}'}</code>
+                  <code className="text-xs bg-background px-2 py-1 rounded">{'{{BILLING_PORTAL_LINK}}'}</code>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -345,24 +371,38 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
       </div>
 
       {/* Preview Section */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <Label>Live Preview</Label>
-          <Badge variant="secondary" className="text-xs">
-            Real-time preview with sample data
+          <Label className="text-base font-semibold">Email Preview</Label>
+          <Badge variant="secondary" className="text-xs gap-1">
+            <Eye className="h-3 w-3" />
+            Live Preview
           </Badge>
         </div>
-        <div className="border rounded-lg bg-muted/30 p-4 min-h-[500px] max-h-[700px] overflow-auto">
-          <div className="bg-white rounded-md shadow-sm">
+        <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">Preview shows how your email will look with sample data:</p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Client:</span>
+              <span className="font-medium">John Smith</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground">Color:</span>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: template.primary_color }}></div>
+                <span className="font-mono text-xs">{template.primary_color}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="border border-border rounded-lg bg-gradient-to-b from-muted/30 to-muted/50 p-6 min-h-[500px] max-h-[700px] overflow-auto shadow-sm">
+          <div className="bg-white rounded-md shadow-md">
             <div 
               className="p-6"
               dangerouslySetInnerHTML={{ __html: previewHtml }}
             />
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Preview shows sample data: John Smith as client name, with placeholder links
-        </p>
       </div>
     </div>
   );
