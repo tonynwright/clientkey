@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import PublicAssessment from "./pages/PublicAssessment";
 import Profile from "./pages/Profile";
 import Pricing from "./pages/Pricing";
+import AnalyticsDocs from "./pages/AnalyticsDocs";
 const queryClient = new QueryClient();
 const App = () => {
   return <QueryClientProvider client={queryClient}>
@@ -25,6 +26,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/pricing" element={<Pricing />} />
+              <Route path="/analytics-docs" element={<AnalyticsDocs />} />
               <Route path="/assessment/:clientId" element={<PublicAssessment />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
