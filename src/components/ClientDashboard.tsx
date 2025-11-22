@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown, Filter, Tag, Edit } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown, Filter, Tag, Edit, List, FolderKanban } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -17,6 +17,7 @@ import { DISCShape } from "./DISCShape";
 import { ClientTagInput } from "./ClientTagInput";
 import { TagPresetsManagement } from "./TagPresetsManagement";
 import { TagAnalytics } from "./TagAnalytics";
+import { TagGroupedView } from "./TagGroupedView";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,6 +95,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [bulkTagOperation, setBulkTagOperation] = useState<'add' | 'remove'>('add');
   const [bulkTags, setBulkTags] = useState<string[]>([]);
   const [showTagAnalytics, setShowTagAnalytics] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "tags">("list");
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -744,6 +746,24 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
             )}
           </div>
           <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 border border-border rounded-md p-1">
+              <Button
+                variant={viewMode === "list" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4 mr-2" />
+                List
+              </Button>
+              <Button
+                variant={viewMode === "tags" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("tags")}
+              >
+                <FolderKanban className="h-4 w-4 mr-2" />
+                Tags
+              </Button>
+            </div>
             <Button
               variant="outline"
               size="sm"
@@ -946,8 +966,23 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         )}
 
         {clients && clients.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {sortedClients.map((client) => (
+          viewMode === "tags" ? (
+            <TagGroupedView
+              clients={sortedClients}
+              onDelete={(clientId) => setDeleteClientId(clientId)}
+              onSendInvite={(clientId) => {
+                const client = clients.find((c) => c.id === clientId);
+                if (client) handleSendInvite(client);
+              }}
+              onViewInsights={(clientId) => {
+                const client = clients.find((c) => c.id === clientId);
+                if (client) onSelectClient(client);
+              }}
+              isReadOnly={isDemoAccount}
+            />
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {sortedClients.map((client) => (
               <Card
                 key={client.id}
                 className="border border-border bg-card p-5 hover:shadow-lg transition-all group relative overflow-hidden"
@@ -1103,6 +1138,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               </Card>
             ))}
           </div>
+          )
         ) : (
           <Card className="border-2 border-dashed border-border p-12 text-center">
             <p className="text-muted-foreground">
