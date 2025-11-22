@@ -934,6 +934,19 @@ const Dashboard = () => {
                       Start Tutorial
                     </Button>
                   </div>
+                  
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-foreground">Analytics Documentation</h3>
+                      <p className="text-sm text-muted-foreground">
+                        View comprehensive documentation of all tracked events and conversion goals
+                      </p>
+                    </div>
+                    <Button onClick={() => navigate('/analytics-docs')} variant="outline">
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      View Docs
+                    </Button>
+                  </div>
                 </div>
               </Card>
               {isAdmin && <CouponManagement />}
