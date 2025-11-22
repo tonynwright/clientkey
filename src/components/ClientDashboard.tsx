@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
@@ -70,6 +71,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [deleteClientId, setDeleteClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClients, setSelectedClients] = useState<Set<string>>(new Set());
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -217,6 +219,120 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
       });
     } finally {
       setDeleteClientId(null);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedClients.size === 0) return;
+
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to delete clients",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .delete()
+        .in("id", Array.from(selectedClients));
+
+      if (error) throw error;
+
+      toast({
+        title: "Clients deleted",
+        description: `${selectedClients.size} client(s) have been removed`,
+      });
+
+      setSelectedClients(new Set());
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    } catch (error) {
+      console.error("Error deleting clients:", error);
+      toast({
+        title: "Failed to delete clients",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkSendInvites = async () => {
+    if (selectedClients.size === 0) return;
+
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to send invitations",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const clientsToInvite = clients?.filter(c => selectedClients.has(c.id) && !c.disc_type) || [];
+    
+    if (clientsToInvite.length === 0) {
+      toast({
+        title: "No clients to invite",
+        description: "Selected clients have already completed assessments",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const client of clientsToInvite) {
+        try {
+          await supabase.functions.invoke("send-assessment-invite", {
+            body: {
+              clientId: client.id,
+              clientName: client.name,
+              clientEmail: client.email,
+            },
+          });
+          successCount++;
+        } catch (error) {
+          console.error(`Error sending invite to ${client.email}:`, error);
+          errorCount++;
+        }
+      }
+
+      toast({
+        title: "Invitations sent",
+        description: `Successfully sent ${successCount} invitation(s)${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+      });
+
+      setSelectedClients(new Set());
+    } catch (error) {
+      console.error("Error sending bulk invites:", error);
+      toast({
+        title: "Failed to send invitations",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const toggleClientSelection = (clientId: string) => {
+    const newSelection = new Set(selectedClients);
+    if (newSelection.has(clientId)) {
+      newSelection.delete(clientId);
+    } else {
+      newSelection.add(clientId);
+    }
+    setSelectedClients(newSelection);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedClients.size === sortedClients.length) {
+      setSelectedClients(new Set());
+    } else {
+      setSelectedClients(new Set(sortedClients.map(c => c.id)));
     }
   };
 
@@ -405,7 +521,21 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
 
       <div>
         <div className="flex items-center justify-between mb-4 gap-4 flex-wrap">
-          <h2 className="text-xl font-semibold text-foreground">All Clients</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-xl font-semibold text-foreground">All Clients</h2>
+            {sortedClients.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={selectedClients.size === sortedClients.length && sortedClients.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  id="select-all"
+                />
+                <label htmlFor="select-all" className="text-sm text-muted-foreground cursor-pointer">
+                  Select All
+                </label>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2 flex-1 min-w-[300px] max-w-2xl">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -437,13 +567,46 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
             </Button>
           </div>
         </div>
+        
+        {selectedClients.size > 0 && (
+          <div className="mb-4 p-4 bg-muted/50 rounded-lg border border-border flex items-center justify-between">
+            <span className="text-sm font-medium">
+              {selectedClients.size} client(s) selected
+            </span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkSendInvites}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Send Invites
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Selected
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedClients(new Set())}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
+
         {clients && clients.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {sortedClients.map((client) => (
               <Card
                 key={client.id}
-                className="border border-border bg-card p-5 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden"
-                onClick={() => onSelectClient(client)}
+                className="border border-border bg-card p-5 hover:shadow-lg transition-all group relative overflow-hidden"
               >
                 {client.disc_type && (
                   <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -451,10 +614,19 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                   </div>
                 )}
                 <div className="space-y-3 relative z-10">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-semibold text-foreground">{client.name}</h3>
-                      <p className="text-sm text-muted-foreground">{client.company || "No company"}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={selectedClients.has(client.id)}
+                        onCheckedChange={() => toggleClientSelection(client.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-1"
+                      />
+                      <div className="flex-1 cursor-pointer" onClick={() => onSelectClient(client)}>
+                        <h3 className="font-semibold text-foreground">{client.name}</h3>
+                        <p className="text-sm text-muted-foreground">{client.company || "No company"}</p>
+                        <p className="text-xs text-muted-foreground">{client.email}</p>
+                      </div>
                     </div>
                     {client.disc_type && (
                       <Badge
@@ -466,8 +638,6 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                       </Badge>
                     )}
                   </div>
-
-                  <p className="text-xs text-muted-foreground">{client.email}</p>
 
                   {(() => {
                     const tracking = getClientTracking(client.id);
