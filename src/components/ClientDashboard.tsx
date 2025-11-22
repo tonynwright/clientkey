@@ -88,6 +88,9 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [tagFilter, setTagFilter] = useState<string>('');
   const [editingClientTags, setEditingClientTags] = useState<{ id: string; tags: string[] } | null>(null);
+  const [showBulkTagDialog, setShowBulkTagDialog] = useState(false);
+  const [bulkTagOperation, setBulkTagOperation] = useState<'add' | 'remove'>('add');
+  const [bulkTags, setBulkTags] = useState<string[]>([]);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -498,6 +501,59 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     }
   };
 
+  const handleBulkTagOperation = async () => {
+    if (selectedClients.size === 0 || bulkTags.length === 0) return;
+
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to edit tags",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const clientsToUpdate = clients?.filter(c => selectedClients.has(c.id)) || [];
+      
+      for (const client of clientsToUpdate) {
+        const currentTags = client.tags || [];
+        let updatedTags: string[];
+
+        if (bulkTagOperation === 'add') {
+          // Add tags that don't already exist
+          const newTags = bulkTags.filter(tag => !currentTags.includes(tag));
+          updatedTags = [...currentTags, ...newTags];
+        } else {
+          // Remove specified tags
+          updatedTags = currentTags.filter(tag => !bulkTags.includes(tag));
+        }
+
+        await supabase
+          .from("clients")
+          .update({ tags: updatedTags })
+          .eq("id", client.id);
+      }
+
+      toast({
+        title: "Tags updated",
+        description: `Successfully ${bulkTagOperation === 'add' ? 'added' : 'removed'} tags for ${selectedClients.size} client(s)`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setShowBulkTagDialog(false);
+      setBulkTags([]);
+      setSelectedClients(new Set());
+    } catch (error) {
+      console.error("Error updating tags:", error);
+      toast({
+        title: "Failed to update tags",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Get all unique tags from clients
   const allTags = Array.from(
     new Set(
@@ -832,6 +888,14 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => setShowBulkTagDialog(true)}
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                Manage Tags
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={handleExportCSV}
               >
                 <FileDown className="h-4 w-4 mr-2" />
@@ -1074,6 +1138,52 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               }}
             >
               Save Tags
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBulkTagDialog} onOpenChange={setShowBulkTagDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Tag Operations</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Operation</label>
+              <Select value={bulkTagOperation} onValueChange={(value: 'add' | 'remove') => setBulkTagOperation(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="add">Add Tags</SelectItem>
+                  <SelectItem value="remove">Remove Tags</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">
+                {bulkTagOperation === 'add' ? 'Tags to Add' : 'Tags to Remove'}
+              </label>
+              <ClientTagInput
+                tags={bulkTags}
+                onTagsChange={setBulkTags}
+                placeholder={bulkTagOperation === 'add' ? "Type and press Enter to add..." : "Type and press Enter to remove..."}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This will {bulkTagOperation} tags {bulkTagOperation === 'add' ? 'to' : 'from'} {selectedClients.size} selected client(s)
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowBulkTagDialog(false);
+              setBulkTags([]);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleBulkTagOperation} disabled={bulkTags.length === 0}>
+              Apply Tags
             </Button>
           </DialogFooter>
         </DialogContent>
