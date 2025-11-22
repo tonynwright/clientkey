@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Mail, Palette, Code, Eye, Send } from "lucide-react";
 import { EmailTemplateLibrary } from "./EmailTemplateLibrary";
+import { analytics } from "@/lib/analytics";
 
 interface EmailTemplate {
   id: string;
@@ -84,6 +85,7 @@ export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
       if (error) throw error;
 
       toast.success("Email template saved successfully");
+      analytics.emailTemplateSaved(template.template_type);
     } catch (error: any) {
       toast.error("Failed to save template: " + error.message);
     } finally {
@@ -111,6 +113,7 @@ export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
       if (error) throw error;
 
       toast.success(`Test email sent to ${user.email}`);
+      analytics.emailTestSent();
     } catch (error: any) {
       toast.error("Failed to send test email: " + error.message);
     } finally {

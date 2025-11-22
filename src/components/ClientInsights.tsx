@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import { pdf } from "@react-pdf/renderer";
 import { ClientInsightsPDF } from "./ClientInsightsPDF";
 import { useAuth } from "@/contexts/AuthContext";
+import { analytics } from "@/lib/analytics";
 
 interface ClientInsightsProps {
   clientId: string;
@@ -63,6 +64,7 @@ export const ClientInsights = ({ clientId, clientName, discType, discScores, onU
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['disc-insights', clientId] });
       toast.success("Insights generated successfully!");
+      analytics.aiInsightsGenerated(clientId, discType);
     },
     onError: (error: any) => {
       console.error('Error generating insights:', error);
@@ -131,6 +133,7 @@ export const ClientInsights = ({ clientId, clientName, discType, discScores, onU
       URL.revokeObjectURL(url);
 
       toast.success("PDF exported successfully!");
+      analytics.pdfExported('insights');
     } catch (error) {
       console.error("Error exporting PDF:", error);
       toast.error("Failed to export PDF. Please try again.");

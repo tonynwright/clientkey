@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DISCAssessment } from "@/components/DISCAssessment";
 import { CheckCircle2 } from "lucide-react";
 import { z } from "zod";
+import { analytics } from "@/lib/analytics";
 
 // Validation schema for assessment results
 const assessmentResultSchema = z.object({
@@ -65,6 +66,11 @@ export default function PublicAssessment() {
 
       setClient(data);
       setLoading(false);
+      
+      // Track assessment started (only if not complete)
+      if (!data.disc_type) {
+        analytics.assessmentStarted(clientId);
+      }
     };
 
     fetchClient();
@@ -117,6 +123,9 @@ export default function PublicAssessment() {
         client_id: clientId,
         event_type: "completed",
       });
+      
+      // Track analytics
+      analytics.assessmentCompleted(clientId, validatedData.dominantType);
 
       setIsComplete(true);
       toast({
