@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown, Filter } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown, Filter, Tag, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ReminderSettings } from "./ReminderSettings";
 import { EmailTemplates } from "./EmailTemplates";
 import { DISCShape } from "./DISCShape";
+import { ClientTagInput } from "./ClientTagInput";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -40,6 +48,7 @@ interface Client {
   disc_type: string | null;
   disc_scores: any;
   created_at: string;
+  tags: string[] | null;
 }
 
 interface EmailTracking {
@@ -77,6 +86,8 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
   const [dateRangeStart, setDateRangeStart] = useState<string>('');
   const [dateRangeEnd, setDateRangeEnd] = useState<string>('');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [tagFilter, setTagFilter] = useState<string>('');
+  const [editingClientTags, setEditingClientTags] = useState<{ id: string; tags: string[] } | null>(null);
 
   const { data: clients, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -354,11 +365,12 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     const clientsToExport = clients?.filter(c => selectedClients.has(c.id)) || [];
     
     // CSV header
-    const headers = ["Name", "Email", "Company", "DISC Type", "D Score", "I Score", "S Score", "C Score", "Created Date"];
+    const headers = ["Name", "Email", "Company", "DISC Type", "D Score", "I Score", "S Score", "C Score", "Tags", "Created Date"];
     
     // CSV rows
     const rows = clientsToExport.map(client => {
       const scores = client.disc_scores as Record<string, number> | null;
+      const tags = client.tags?.join('; ') || 'N/A';
       return [
         `"${client.name}"`,
         `"${client.email}"`,
@@ -368,6 +380,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         scores?.I || 'N/A',
         scores?.S || 'N/A',
         scores?.C || 'N/A',
+        `"${tags}"`,
         `"${new Date(client.created_at).toLocaleDateString()}"`,
       ].join(',');
     });
@@ -450,6 +463,48 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     }
   };
 
+  const handleUpdateTags = async (clientId: string, tags: string[]) => {
+    if (isDemoAccount) {
+      toast({
+        title: "Demo account is read-only",
+        description: "Sign up for your own account to edit tags",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("clients")
+        .update({ tags })
+        .eq("id", clientId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Tags updated",
+        description: "Client tags have been updated successfully",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      setEditingClientTags(null);
+    } catch (error) {
+      console.error("Error updating tags:", error);
+      toast({
+        title: "Failed to update tags",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Get all unique tags from clients
+  const allTags = Array.from(
+    new Set(
+      clients?.flatMap((c) => c.tags || []) || []
+    )
+  ).sort();
+
   const sortedClients = clients ? [...clients]
     .filter((client) => {
       // Search filter
@@ -485,6 +540,12 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
         const endDate = new Date(dateRangeEnd);
         endDate.setHours(23, 59, 59, 999); // Include the entire end date
         if (clientDate > endDate) return false;
+      }
+
+      // Tag filter
+      if (tagFilter) {
+        const clientTags = client.tags || [];
+        if (!clientTags.includes(tagFilter.toLowerCase())) return false;
       }
 
       return true;
@@ -719,9 +780,26 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                     className="w-full"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Tag</label>
+                  <Select value={tagFilter} onValueChange={(value: any) => setTagFilter(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All tags" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Tags</SelectItem>
+                      {allTags.map((tag) => (
+                        <SelectItem key={tag} value={tag}>
+                          {tag}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {(discTypeFilter !== 'all' || completionFilter !== 'all' || dateRangeStart || dateRangeEnd) && (
+              {(discTypeFilter !== 'all' || completionFilter !== 'all' || dateRangeStart || dateRangeEnd || tagFilter) && (
                 <div className="mt-4 flex items-center justify-between">
                   <p className="text-sm text-muted-foreground">
                     {sortedClients.length} client(s) match your filters
@@ -734,6 +812,7 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                       setCompletionFilter('all');
                       setDateRangeStart('');
                       setDateRangeEnd('');
+                      setTagFilter('');
                     }}
                   >
                     Clear Filters
@@ -863,6 +942,17 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                     </div>
                   )}
 
+                  {client.tags && client.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 pt-2">
+                      {client.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          <Tag className="h-3 w-3 mr-1" />
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     {!client.disc_type && (
                       <Button
@@ -909,6 +999,17 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
+                        setEditingClientTags({ id: client.id, tags: client.tags || [] });
+                      }}
+                      title="Edit tags"
+                    >
+                      <Tag className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setDeleteClientId(client.id);
                       }}
                       title="Delete client"
@@ -946,6 +1047,37 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!editingClientTags} onOpenChange={(open) => !open && setEditingClientTags(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Client Tags</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ClientTagInput
+              tags={editingClientTags?.tags || []}
+              onTagsChange={(tags) => 
+                setEditingClientTags(editingClientTags ? { ...editingClientTags, tags } : null)
+              }
+              placeholder="Type a tag and press Enter..."
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingClientTags(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => {
+                if (editingClientTags) {
+                  handleUpdateTags(editingClientTags.id, editingClientTags.tags);
+                }
+              }}
+            >
+              Save Tags
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
