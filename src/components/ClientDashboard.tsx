@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search } from "lucide-react";
+import { Users, Target, TrendingUp, Award, Download, Mail, MailOpen, MousePointerClick, CheckCircle2, Zap, Trash2, ArrowUpDown, Search, FileDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { pdf } from "@react-pdf/renderer";
 import { ClientProfilePDF } from "./ClientProfilePDF";
@@ -336,6 +336,59 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
     }
   };
 
+  const handleExportCSV = () => {
+    if (selectedClients.size === 0) {
+      toast({
+        title: "No clients selected",
+        description: "Please select clients to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const clientsToExport = clients?.filter(c => selectedClients.has(c.id)) || [];
+    
+    // CSV header
+    const headers = ["Name", "Email", "Company", "DISC Type", "D Score", "I Score", "S Score", "C Score", "Created Date"];
+    
+    // CSV rows
+    const rows = clientsToExport.map(client => {
+      const scores = client.disc_scores as Record<string, number> | null;
+      return [
+        `"${client.name}"`,
+        `"${client.email}"`,
+        `"${client.company || 'N/A'}"`,
+        `"${client.disc_type || 'Not assessed'}"`,
+        scores?.D || 'N/A',
+        scores?.I || 'N/A',
+        scores?.S || 'N/A',
+        scores?.C || 'N/A',
+        `"${new Date(client.created_at).toLocaleDateString()}"`,
+      ].join(',');
+    });
+    
+    // Combine headers and rows
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `clientkey_clients_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Export successful",
+      description: `Exported ${clientsToExport.length} client(s) to CSV`,
+    });
+  };
+
   const handleExportPDF = async (client: Client) => {
     // Check if user is paid
     if (!isPaidUser) {
@@ -574,6 +627,14 @@ export const ClientDashboard = ({ onSelectClient, onUpgrade }: ClientDashboardPr
               {selectedClients.size} client(s) selected
             </span>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
