@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2, Mail, Palette, Code, Eye, Send } from "lucide-react";
+import { EmailTemplateLibrary } from "./EmailTemplateLibrary";
 
 interface EmailTemplate {
   id: string;
@@ -175,6 +176,7 @@ export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
                 saving={saving}
                 sendingTest={sendingTest}
                 isPaidUser={isPaidUser}
+                templateType="invitation"
               />
             )}
           </TabsContent>
@@ -189,6 +191,7 @@ export function EmailTemplates({ onUpgrade }: { onUpgrade?: () => void }) {
                 saving={saving}
                 sendingTest={sendingTest}
                 isPaidUser={isPaidUser}
+                templateType="reminder"
               />
             )}
           </TabsContent>
@@ -206,13 +209,19 @@ interface TemplateEditorProps {
   saving: boolean;
   sendingTest: boolean;
   isPaidUser: boolean;
+  templateType: "invitation" | "reminder";
 }
 
-function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendingTest, isPaidUser }: TemplateEditorProps) {
+function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendingTest, isPaidUser, templateType }: TemplateEditorProps) {
   const [showCode, setShowCode] = useState(false);
   
   const handleChange = (field: keyof EmailTemplate, value: string) => {
     onUpdate({ ...template, [field]: value });
+  };
+
+  const handleSelectTemplate = (content: string) => {
+    onUpdate({ ...template, content });
+    toast.success("Template applied! Customize it with your branding.");
   };
 
   // Generate preview with sample data
@@ -309,25 +318,32 @@ function TemplateEditor({ template, onUpdate, onSave, onSendTest, saving, sendin
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="content">Email Content</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCode(!showCode)}
-              disabled={!isPaidUser}
-            >
-              {showCode ? (
-                <>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </>
-              ) : (
-                <>
-                  <Code className="h-4 w-4 mr-2" />
-                  Edit Code
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <EmailTemplateLibrary 
+                onSelectTemplate={handleSelectTemplate}
+                currentTemplateType={templateType}
+                disabled={!isPaidUser}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCode(!showCode)}
+                disabled={!isPaidUser}
+              >
+                {showCode ? (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview
+                  </>
+                ) : (
+                  <>
+                    <Code className="h-4 w-4 mr-2" />
+                    Edit Code
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
           {showCode && (
             <>
