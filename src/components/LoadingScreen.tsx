@@ -31,15 +31,15 @@ export const LoadingScreen = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="animate-fade-in w-full max-w-md px-8">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-4">
+      <div className="animate-fade-in w-full max-w-md px-4 sm:px-8">
         {/* Logo with pulse animation */}
-        <div className="mb-8 animate-scale-in flex justify-center">
+        <div className="mb-6 sm:mb-8 animate-scale-in flex justify-center">
           <div className="relative">
             <img 
               src={logo} 
               alt="ClientKey.io" 
-              className="h-24 w-24 animate-pulse"
+              className="h-16 w-16 sm:h-24 sm:w-24 animate-pulse"
             />
             {/* Glow effect */}
             <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse" />
@@ -47,7 +47,7 @@ export const LoadingScreen = () => {
         </div>
 
         {/* Brand name */}
-        <h1 className="text-3xl font-bold text-foreground mb-8 text-center animate-fade-in">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-6 sm:mb-8 text-center animate-fade-in">
           ClientKey.io
         </h1>
 

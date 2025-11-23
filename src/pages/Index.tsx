@@ -55,17 +55,17 @@ export default function Index() {
       <DISCBackground />
       
       {/* Header Navigation */}
-      <header className="container mx-auto px-4 py-6">
+      <header className="container mx-auto px-4 py-4 sm:py-6">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={logo} alt="ClientKey.io" className="h-10 w-10" />
-            <span className="text-2xl font-bold text-foreground">ClientKey.io</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img src={logo} alt="ClientKey.io" className="h-8 w-8 sm:h-10 sm:w-10" />
+            <span className="text-lg sm:text-2xl font-bold text-foreground">ClientKey.io</span>
           </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/auth')}>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="sm" className="text-sm sm:text-base" onClick={() => navigate('/auth')}>
               Sign In
             </Button>
-            <Button onClick={() => navigate('/auth')}>
+            <Button size="sm" className="text-sm sm:text-base" onClick={() => navigate('/auth')}>
               Get Started
             </Button>
           </div>
@@ -73,24 +73,24 @@ export default function Index() {
       </header>
       
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center" aria-label="Hero section">
-        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 animate-fade-down">
+      <section className="container mx-auto px-4 py-12 sm:py-16 md:py-20 text-center" aria-label="Hero section">
+        <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 animate-fade-down text-xs sm:text-sm">
           🔥 Limited Time Offer - First 30 Signups Only
         </Badge>
         
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight animate-fade-up stagger-1">
-          What Would You Pay to<br />
-          <span className="text-primary">Never Lose a Client?</span>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4 sm:mb-6 leading-tight animate-fade-up stagger-1">
+          What Would You Pay to<br className="hidden sm:block" />
+          <span className="text-primary"> Never Lose a Client?</span>
         </h1>
         
-        <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-up stagger-2">
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-muted-foreground mb-6 sm:mb-8 max-w-3xl mx-auto animate-fade-up stagger-2 px-2">
           ClientKey helps agencies understand their clients' personality types and communication styles—so you can deliver exactly what they need, every time.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-up stagger-3">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-8 sm:mb-12 animate-fade-up stagger-3 px-4">
           <Button 
             size="lg" 
-            className="text-lg px-8 py-6 hover:scale-105 transition-transform"
+            className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover:scale-105 transition-transform w-full sm:w-auto"
             onClick={() => navigate('/auth')}
           >
             Start Free - 3 Clients
@@ -98,7 +98,7 @@ export default function Index() {
           <Button 
             size="lg" 
             variant="outline"
-            className="text-lg px-8 py-6 hover:scale-105 transition-transform border-2"
+            className="text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 hover:scale-105 transition-transform border-2 w-full sm:w-auto"
             onClick={handleDemoLogin}
             disabled={demoLoading}
           >
@@ -127,13 +127,13 @@ export default function Index() {
       </section>
 
       {/* Problem Statement */}
-      <section ref={problemSection.ref} className="container mx-auto px-4 py-16" aria-label="The problem ClientKey solves">
+      <section ref={problemSection.ref} className="container mx-auto px-4 py-12 sm:py-16" aria-label="The problem ClientKey solves">
         <Card className={`border-2 border-destructive/20 bg-destructive/5 ${problemSection.isInView ? 'animate-scale-up' : 'opacity-0'}`}>
-          <CardContent className="p-8 md:p-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
+          <CardContent className="p-6 sm:p-8 md:p-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-4 sm:mb-6">
               The Silent Client Killer
             </h2>
-            <p className="text-lg text-center text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-center text-muted-foreground max-w-3xl mx-auto">
               You're not losing clients because your work is bad. You're losing them because your communication style doesn't match theirs. A detail-oriented client feels rushed when you move too fast. A big-picture client feels micromanaged when you focus on details.
             </p>
           </CardContent>
@@ -141,8 +141,8 @@ export default function Index() {
       </section>
 
       {/* How It Works */}
-      <section ref={stepsSection.ref} className="container mx-auto px-4 py-16" aria-label="How ClientKey works">
-        <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 ${stepsSection.isInView ? 'animate-fade-up' : 'opacity-0'}`}>
+      <section ref={stepsSection.ref} className="container mx-auto px-4 py-12 sm:py-16" aria-label="How ClientKey works">
+        <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 sm:mb-12 ${stepsSection.isInView ? 'animate-fade-up' : 'opacity-0'}`}>
           How ClientKey Works
         </h2>
         
@@ -195,8 +195,8 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl my-16" aria-label="Platform features">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+      <section className="container mx-auto px-4 py-12 sm:py-16 bg-muted/30 rounded-3xl my-12 sm:my-16" aria-label="Platform features">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 sm:mb-12">
           Everything You Need
         </h2>
         
@@ -245,87 +245,87 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="container mx-auto px-4 py-20" aria-label="Pricing information">
-        <div className="text-center mb-12">
-          <Badge className="mb-4 bg-destructive text-destructive-foreground">
+      <section id="pricing" className="container mx-auto px-4 py-12 sm:py-16 md:py-20" aria-label="Pricing information">
+        <div className="text-center mb-8 sm:mb-12">
+          <Badge className="mb-4 bg-destructive text-destructive-foreground text-xs sm:text-sm">
             ⚡ Early Bird Special - Only 30 Spots Available
           </Badge>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 px-4">
             Lock In Your Rate Today
           </h2>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-base sm:text-lg md:text-xl text-muted-foreground px-4">
             After the first 30 signups, the price increases to $49/month
           </p>
         </div>
 
         <div className="max-w-lg mx-auto">
           <Card className="border-4 border-primary relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-6 py-2 text-sm font-bold">
+            <div className="absolute top-0 right-0 bg-primary text-primary-foreground px-4 sm:px-6 py-1 sm:py-2 text-xs sm:text-sm font-bold">
               BEST VALUE
             </div>
-            <CardContent className="p-8 md:p-10">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">Early Bird Annual</h3>
+            <CardContent className="p-6 sm:p-8 md:p-10">
+              <div className="text-center mb-6 sm:mb-8">
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">Early Bird Annual</h3>
                 <div className="flex items-baseline justify-center gap-2 mb-2">
-                  <span className="text-5xl font-bold text-primary">$19</span>
-                  <span className="text-xl text-muted-foreground">/month</span>
+                  <span className="text-4xl sm:text-5xl font-bold text-primary">$19</span>
+                  <span className="text-lg sm:text-xl text-muted-foreground">/month</span>
                 </div>
-                <p className="text-sm text-muted-foreground line-through">Regular: $49/month</p>
-                <Badge variant="outline" className="mt-2">Save $360/year</Badge>
+                <p className="text-xs sm:text-sm text-muted-foreground line-through">Regular: $49/month</p>
+                <Badge variant="outline" className="mt-2 text-xs sm:text-sm">Save $360/year</Badge>
               </div>
 
-              <div className="space-y-4 mb-8">
+              <div className="space-y-3 sm:space-y-4 mb-6 sm:mb-8">
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold">Up to 300 clients</p>
-                    <p className="text-sm text-muted-foreground">Profile unlimited clients</p>
+                    <p className="font-semibold text-sm sm:text-base">Up to 300 clients</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Profile unlimited clients</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold">Up to 300 staff members</p>
-                    <p className="text-sm text-muted-foreground">Full team access</p>
+                    <p className="font-semibold text-sm sm:text-base">Up to 300 staff members</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Full team access</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="font-semibold">Rate locked for 1 year</p>
-                    <p className="text-sm text-muted-foreground">Never pay more than $19/month</p>
+                    <p className="font-semibold text-sm sm:text-base">Rate locked for 1 year</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Never pay more than $19/month</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Unlimited DISC assessments</span>
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Unlimited DISC assessments</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Communication playbooks</span>
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Communication playbooks</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Compatibility reports</span>
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Compatibility reports</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Custom email templates</span>
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Custom email templates</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Priority support</span>
+                  <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">Priority support</span>
                 </div>
               </div>
 
               <Button 
-                className="w-full py-6 text-lg"
+                className="w-full py-5 sm:py-6 text-base sm:text-lg"
                 onClick={() => navigate('/dashboard')}
               >
                 Claim Your Early Bird Spot
               </Button>
 
-              <p className="text-center text-sm text-muted-foreground mt-4">
+              <p className="text-center text-xs sm:text-sm text-muted-foreground mt-4">
                 30-day money-back guarantee • Cancel anytime
               </p>
             </CardContent>
@@ -340,8 +340,8 @@ export default function Index() {
       </section>
 
       {/* Social Proof / Benefits */}
-      <section className="container mx-auto px-4 py-16" aria-label="Benefits and customer value">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
+      <section className="container mx-auto px-4 py-12 sm:py-16" aria-label="Benefits and customer value">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 sm:mb-12">
           Why Agencies Choose ClientKey
         </h2>
         
@@ -385,23 +385,23 @@ export default function Index() {
       </section>
 
       {/* Final CTA */}
-      <section className="container mx-auto px-4 py-20" aria-label="Call to action">
+      <section className="container mx-auto px-4 py-12 sm:py-16 md:py-20" aria-label="Call to action">
         <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-2 border-primary/20">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <CardContent className="p-6 sm:p-8 md:p-12 text-center">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
               Don't Let Another Client Walk Away
             </h2>
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
               Join the first 30 agencies to lock in the $19/month rate and start building stronger client relationships today.
             </p>
             <Button 
               size="lg" 
-              className="text-lg px-12 py-6"
+              className="text-base sm:text-lg px-8 sm:px-12 py-5 sm:py-6 w-full sm:w-auto"
               onClick={() => navigate('/dashboard')}
             >
               Get Started Now - Only $19/Month
             </Button>
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-xs sm:text-sm text-muted-foreground mt-4">
               ⏰ Limited to first 30 signups • Price increases to $49/month after
             </p>
           </CardContent>
@@ -409,13 +409,13 @@ export default function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border mt-20">
-        <div className="container mx-auto px-4 py-8">
+      <footer className="border-t border-border mt-12 sm:mt-16 md:mt-20">
+        <div className="container mx-auto px-4 py-6 sm:py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               © 2025 ClientKey. All rights reserved.
             </p>
-            <div className="flex gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
               <button onClick={() => navigate('/pricing')} className="hover:text-primary transition-colors">Pricing</button>
               <button className="hover:text-primary transition-colors">Privacy Policy</button>
               <button className="hover:text-primary transition-colors">Terms of Service</button>
