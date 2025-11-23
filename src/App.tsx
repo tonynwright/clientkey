@@ -16,6 +16,8 @@ const PublicAssessment = lazy(() => import("./pages/PublicAssessment"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const AnalyticsDocs = lazy(() => import("./pages/AnalyticsDocs"));
+const HealthDashboard = lazy(() => import("./pages/HealthDashboard"));
+const ClientHealth = lazy(() => import("./pages/ClientHealth"));
 const queryClient = new QueryClient();
 const App = () => {
   return <QueryClientProvider client={queryClient}>
@@ -33,6 +35,8 @@ const App = () => {
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/analytics-docs" element={<AnalyticsDocs />} />
                 <Route path="/assessment/:clientId" element={<PublicAssessment />} />
+                <Route path="/health" element={<HealthDashboard />} />
+                <Route path="/health/client/:clientId" element={<ClientHealth />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
