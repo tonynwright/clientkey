@@ -52,8 +52,9 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
       <DISCBackground />
+      
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
+      <section className="container mx-auto px-4 py-20 text-center" aria-label="Hero section">
         <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 animate-fade-down">
           🔥 Limited Time Offer - First 30 Signups Only
         </Badge>
@@ -107,7 +108,7 @@ export default function Index() {
       </section>
 
       {/* Problem Statement */}
-      <section ref={problemSection.ref} className="container mx-auto px-4 py-16">
+      <section ref={problemSection.ref} className="container mx-auto px-4 py-16" aria-label="The problem ClientKey solves">
         <Card className={`border-2 border-destructive/20 bg-destructive/5 ${problemSection.isInView ? 'animate-scale-up' : 'opacity-0'}`}>
           <CardContent className="p-8 md:p-12">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-6">
@@ -121,7 +122,7 @@ export default function Index() {
       </section>
 
       {/* How It Works */}
-      <section ref={stepsSection.ref} className="container mx-auto px-4 py-16">
+      <section ref={stepsSection.ref} className="container mx-auto px-4 py-16" aria-label="How ClientKey works">
         <h2 className={`text-4xl md:text-5xl font-bold text-center mb-12 ${stepsSection.isInView ? 'animate-fade-up' : 'opacity-0'}`}>
           How ClientKey Works
         </h2>
@@ -175,7 +176,7 @@ export default function Index() {
       </section>
 
       {/* Features */}
-      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl my-16">
+      <section className="container mx-auto px-4 py-16 bg-muted/30 rounded-3xl my-16" aria-label="Platform features">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
           Everything You Need
         </h2>
@@ -225,7 +226,7 @@ export default function Index() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="container mx-auto px-4 py-20">
+      <section id="pricing" className="container mx-auto px-4 py-20" aria-label="Pricing information">
         <div className="text-center mb-12">
           <Badge className="mb-4 bg-destructive text-destructive-foreground">
             ⚡ Early Bird Special - Only 30 Spots Available
@@ -320,7 +321,7 @@ export default function Index() {
       </section>
 
       {/* Social Proof / Benefits */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container mx-auto px-4 py-16" aria-label="Benefits and customer value">
         <h2 className="text-4xl md:text-5xl font-bold text-center mb-12">
           Why Agencies Choose ClientKey
         </h2>
@@ -365,7 +366,7 @@ export default function Index() {
       </section>
 
       {/* Final CTA */}
-      <section className="container mx-auto px-4 py-20">
+      <section className="container mx-auto px-4 py-20" aria-label="Call to action">
         <Card className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 border-2 border-primary/20">
           <CardContent className="p-12 text-center">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
