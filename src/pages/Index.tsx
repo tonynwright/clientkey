@@ -10,6 +10,7 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/clientkey-logo.png";
 
 export default function Index() {
   const navigate = useNavigate();
@@ -52,6 +53,24 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative">
       <DISCBackground />
+      
+      {/* Header Navigation */}
+      <header className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="ClientKey.io" className="h-10 w-10" />
+            <span className="text-2xl font-bold text-foreground">ClientKey.io</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate('/auth')}>
+              Sign In
+            </Button>
+            <Button onClick={() => navigate('/auth')}>
+              Get Started
+            </Button>
+          </div>
+        </div>
+      </header>
       
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 text-center" aria-label="Hero section">

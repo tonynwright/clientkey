@@ -36,6 +36,7 @@ import { ComprehensiveTutorial } from "@/components/ComprehensiveTutorial";
 import { UserPlus, LayoutDashboard, FileText, Target, Download, GitCompare, Zap, Settings, Shield, Sparkles, Users, CheckCircle2, Mail, TrendingUp, AlertTriangle, RefreshCw } from "lucide-react";
 import { pdf } from "@react-pdf/renderer";
 import { analytics } from "@/lib/analytics";
+import logo from "@/assets/clientkey-logo.png";
 
 const clientSchema = z.object({
   name: z
@@ -489,9 +490,10 @@ const Dashboard = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="ClientKey.io" className="h-10 w-10" />
               <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-                ClientKey
+                ClientKey.io
                 {isAdmin && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold rounded-full bg-primary text-primary-foreground">
                     <Shield className="h-3 w-3" />
