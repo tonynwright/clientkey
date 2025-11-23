@@ -5,6 +5,7 @@ import { Check, X, Users, Target, TrendingUp, Brain, Mail, FileText, Zap, Crown,
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { analytics } from "@/lib/analytics";
+import { SEOHead } from "@/components/SEOHead";
 
 export default function Pricing() {
   const navigate = useNavigate();
@@ -49,8 +50,38 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Header */}
+    <>
+      <SEOHead
+        title="Pricing - ClientKey DISC Assessment Platform"
+        description="Affordable DISC personality assessment pricing for agencies. Start free with 3 clients or unlock all features with Pro plan at $19/month (early bird special)."
+        keywords="DISC assessment pricing, client profiling cost, agency tools pricing, personality assessment plans"
+        canonicalUrl="https://clientkey.app/pricing"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "ClientKey Pro Plan",
+          "description": "Professional DISC personality assessment platform for agencies",
+          "offers": [
+            {
+              "@type": "Offer",
+              "name": "Free Plan",
+              "price": "0",
+              "priceCurrency": "USD",
+              "availability": "https://schema.org/InStock"
+            },
+            {
+              "@type": "Offer",
+              "name": "Pro Plan (Early Bird)",
+              "price": "19",
+              "priceCurrency": "USD",
+              "priceValidUntil": "2025-12-31",
+              "availability": "https://schema.org/LimitedAvailability"
+            }
+          ]
+        }}
+      />
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+        {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -553,5 +584,6 @@ export default function Pricing() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
