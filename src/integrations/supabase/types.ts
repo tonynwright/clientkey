@@ -142,6 +142,42 @@ export type Database = {
         }
         Relationships: []
       }
+      clients_health: {
+        Row: {
+          account_manager: string
+          company_name: string
+          contract_end_date: string
+          created_at: string | null
+          id: string
+          monthly_retainer: number
+          service_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_manager: string
+          company_name: string
+          contract_end_date: string
+          created_at?: string | null
+          id?: string
+          monthly_retainer: number
+          service_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_manager?: string
+          company_name?: string
+          contract_end_date?: string
+          created_at?: string | null
+          id?: string
+          monthly_retainer?: number
+          service_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       demo_seed_log: {
         Row: {
           created_at: string
@@ -292,6 +328,50 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      health_signals: {
+        Row: {
+          client_id: string
+          composite_score: number
+          created_at: string | null
+          id: string
+          last_contact_date: string
+          meeting_attendance: number
+          payment_status: number
+          responsiveness: number
+          results_delivery: number
+        }
+        Insert: {
+          client_id: string
+          composite_score: number
+          created_at?: string | null
+          id?: string
+          last_contact_date: string
+          meeting_attendance: number
+          payment_status: number
+          responsiveness: number
+          results_delivery: number
+        }
+        Update: {
+          client_id?: string
+          composite_score?: number
+          created_at?: string | null
+          id?: string
+          last_contact_date?: string
+          meeting_attendance?: number
+          payment_status?: number
+          responsiveness?: number
+          results_delivery?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_signals_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients_health"
             referencedColumns: ["id"]
           },
         ]
