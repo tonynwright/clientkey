@@ -62,6 +62,9 @@ export default function Index() {
             <span className="text-lg sm:text-2xl font-bold text-foreground">ClientKey.io</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" size="sm" className="text-sm sm:text-base" onClick={() => navigate('/health')}>
+              Health Dashboard
+            </Button>
             <Button variant="ghost" size="sm" className="text-sm sm:text-base" onClick={() => navigate('/auth')}>
               Sign In
             </Button>
