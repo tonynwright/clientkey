@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Users, Target, TrendingUp, MessageSquare, Mail, Brain, Clock, Shield, Zap } from "lucide-react";
+import { Check, Users, Target, TrendingUp, MessageSquare, Mail, Brain, Clock, Shield, Zap, Activity } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DISCBackground } from "@/components/DISCBackground";
 import { DISCShape } from "@/components/DISCShape";
@@ -197,6 +197,107 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Client Health Tracking Highlight */}
+      <section className="container mx-auto px-4 py-12 sm:py-16" aria-label="Client health tracking feature">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+                NEW FEATURE
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+                Never Lose a Client to Poor Communication Again
+              </h2>
+              <p className="text-lg text-muted-foreground mb-6">
+                Track client satisfaction in real-time with our data-driven health scoring system. 
+                Identify at-risk accounts before they churn and take proactive action to save relationships.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                    <Activity className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Real-Time Health Scores</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Monitor payment status, responsiveness, meeting attendance, and satisfaction metrics
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Trend Analysis</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Visualize 6-month health trends to spot declining relationships early
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">At-Risk Alerts</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when clients show warning signs so you can intervene immediately
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <Button 
+                size="lg" 
+                className="mt-8"
+                onClick={() => navigate('/health')}
+              >
+                View Health Dashboard Demo
+              </Button>
+            </div>
+            <Card className="border-2 border-primary/20 shadow-xl">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b">
+                    <h3 className="font-semibold">Client Health Overview</h3>
+                    <Badge variant="outline">Live Demo</Badge>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">Acme Corp</p>
+                        <p className="text-xs text-muted-foreground">$8,000/mo • Healthy</p>
+                      </div>
+                      <span className="text-sm font-semibold text-green-600">4.8</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">Tech Solutions Ltd</p>
+                        <p className="text-xs text-muted-foreground">$5,500/mo • At Risk</p>
+                      </div>
+                      <span className="text-sm font-semibold text-yellow-600">3.2</span>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">Digital Agency Co</p>
+                        <p className="text-xs text-muted-foreground">$12,000/mo • Critical</p>
+                      </div>
+                      <span className="text-sm font-semibold text-red-600">2.1</span>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground pt-3 border-t">
+                    Health scores updated weekly based on 5 key relationship signals
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Features */}
       <section className="container mx-auto px-4 py-12 sm:py-16 bg-muted/30 rounded-3xl my-12 sm:my-16" aria-label="Platform features">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center mb-8 sm:mb-12">
@@ -216,6 +317,11 @@ export default function Index() {
               description: "Specific strategies for emails, meetings, and presentations tailored to each type"
             },
             {
+              icon: Activity,
+              title: "Client Health Tracking",
+              description: "Monitor client satisfaction and identify at-risk accounts before they churn"
+            },
+            {
               icon: Users,
               title: "Team Compatibility Reports",
               description: "See how different personalities work together and avoid conflicts"
@@ -227,13 +333,8 @@ export default function Index() {
             },
             {
               icon: TrendingUp,
-              title: "Client Dashboard",
-              description: "Manage all your clients and their personality profiles in one place"
-            },
-            {
-              icon: Clock,
-              title: "Smart Reminders",
-              description: "Automatic follow-ups to ensure all clients complete their assessments"
+              title: "Analytics Dashboard",
+              description: "Track engagement, completion rates, and client relationship trends over time"
             }
           ].map((feature, index) => (
             <Card key={index} className="border-border hover:border-primary/50 transition-colors">
@@ -356,7 +457,7 @@ export default function Index() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Reduce Client Churn</h3>
               <p className="text-muted-foreground">
-                Stop losing clients due to communication mismatches. Speak their language from day one.
+                Proactively monitor client health and identify at-risk accounts before they leave. Track satisfaction metrics and take action early.
               </p>
             </CardContent>
           </Card>
