@@ -3,10 +3,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, TrendingUp, TrendingDown, AlertCircle, Home } from "lucide-react";
+import { Plus, TrendingUp, TrendingDown, AlertCircle, Home, HelpCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AddClientForm } from "@/components/health/AddClientForm";
+import { ClientHealthTutorial } from "@/components/health/ClientHealthTutorial";
 import { toast } from "sonner";
 
 interface Client {
@@ -31,6 +32,7 @@ export default function HealthDashboard() {
   const [signals, setSignals] = useState<Record<string, LatestSignal>>({});
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [tutorialOpen, setTutorialOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -104,15 +106,26 @@ export default function HealthDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="mb-4 gap-2"
-              onClick={() => navigate("/")}
-            >
-              <Home className="w-4 h-4" />
-              Back to Home
-            </Button>
+            <div className="flex items-center gap-2 mb-4">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => navigate("/")}
+              >
+                <Home className="w-4 h-4" />
+                Back to Home
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => setTutorialOpen(true)}
+              >
+                <HelpCircle className="w-4 h-4" />
+                Tutorial
+              </Button>
+            </div>
             <h1 className="text-4xl font-bold text-foreground">Client Health Dashboard</h1>
             <p className="text-muted-foreground mt-2">Monitor and track client health scores</p>
           </div>
@@ -210,6 +223,8 @@ export default function HealthDashboard() {
           </div>
         )}
       </div>
+
+      <ClientHealthTutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
     </div>
   );
 }
