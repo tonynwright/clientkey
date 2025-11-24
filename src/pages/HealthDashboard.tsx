@@ -37,6 +37,15 @@ export default function HealthDashboard() {
   useEffect(() => {
     if (user) {
       fetchClients();
+      
+      // Check if user has seen the tutorial before
+      const hasSeenTutorial = localStorage.getItem('health_tutorial_seen');
+      if (!hasSeenTutorial) {
+        // Show tutorial after a brief delay for better UX
+        setTimeout(() => {
+          setTutorialOpen(true);
+        }, 500);
+      }
     }
   }, [user]);
 
@@ -224,7 +233,13 @@ export default function HealthDashboard() {
         )}
       </div>
 
-      <ClientHealthTutorial open={tutorialOpen} onClose={() => setTutorialOpen(false)} />
+      <ClientHealthTutorial 
+        open={tutorialOpen} 
+        onClose={() => {
+          setTutorialOpen(false);
+          localStorage.setItem('health_tutorial_seen', 'true');
+        }} 
+      />
     </div>
   );
 }
